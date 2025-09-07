@@ -67,20 +67,32 @@ export const refreshMenu = async (win: BrowserWindow) => {
 export const mainMenuTemplate = async (
   win: BrowserWindow,
 ): Promise<MenuTemplate> => {
-  const innerRefreshMenu = () => refreshMenu(win);
-  const { navigationHistory } = win.webContents;
-  await loadAllMenuPlugins(win);
+  try {
+    console.log('DEBUG: Starting mainMenuTemplate generation');
+    const innerRefreshMenu = () => refreshMenu(win);
+    const { navigationHistory } = win.webContents;
+    
+    console.log('DEBUG: Loading menu plugins');
+    await loadAllMenuPlugins(win);
 
-  const allPluginsStubs = await allPlugins();
+    console.log('DEBUG: Getting all plugins');
+    const allPluginsStubs = await allPlugins();
+    console.log('DEBUG: Found plugins:', Object.keys(allPluginsStubs).length);
 
-  const menuResult = await Promise.all(
-    Object.entries(getAllMenuTemplate()).map(async ([id, template]) => {
-      const plugin = allPluginsStubs[id];
-      const pluginLabel = plugin?.name?.() ?? id;
-      const pluginDescription = plugin?.description?.() ?? undefined;
-      const isNew = plugin?.addedVersion
-        ? satisfies(packageJson.version, plugin.addedVersion)
-        : false;
+    console.log('DEBUG: Getting menu templates from plugins');
+    const menuTemplates = getAllMenuTemplate();
+    console.log('DEBUG: Menu templates found:', Object.keys(menuTemplates).length);
+
+    const menuResult = await Promise.all(
+      Object.entries(menuTemplates).map(async ([id, template]) => {
+        try {
+          console.log('DEBUG: Processing plugin menu:', id);
+          const plugin = allPluginsStubs[id];
+          const pluginLabel = plugin?.name?.() ?? id;
+          const pluginDescription = plugin?.description?.() ?? undefined;
+          const isNew = plugin?.addedVersion
+            ? satisfies(packageJson.version, plugin.addedVersion)
+            : false;
 
       if (!(await config.plugins.isEnabled(id))) {
         return [
@@ -116,8 +128,23 @@ export const mainMenuTemplate = async (
           ],
         } satisfies Electron.MenuItemConstructorOptions,
       ] as const;
-    }),
-  );
+        } catch (error) {
+          console.error('DEBUG: Error processing plugin menu:', id, error);
+          // Return a basic menu item for this plugin
+          return [
+            id,
+            await pluginEnabledMenu(
+              id,
+              id,
+              undefined,
+              false,
+              true,
+              innerRefreshMenu,
+            ),
+          ] as const;
+        }
+      }),
+    );
 
   const availablePlugins = Object.keys(await allPlugins());
   const pluginMenus = await Promise.all(
@@ -128,32 +155,50 @@ export const mainMenuTemplate = async (
 
         return aPluginLabel.localeCompare(bPluginLabel);
       })
-      .map((id) => {
-        const predefinedTemplate = menuResult.find((it) => it[0] === id);
-        if (predefinedTemplate) return predefinedTemplate[1];
+      .map(async (id) => {
+        try {
+          console.log('DEBUG: Processing available plugin:', id);
+          const predefinedTemplate = menuResult.find((it) => it[0] === id);
+          if (predefinedTemplate) return predefinedTemplate[1];
 
-        const plugin = allPluginsStubs[id];
-        const pluginLabel = plugin?.name?.() ?? id;
-        const pluginDescription = plugin?.description?.() ?? undefined;
-        const isNew = plugin?.addedVersion
-          ? satisfies(packageJson.version, plugin.addedVersion)
-          : false;
+          const plugin = allPluginsStubs[id];
+          const pluginLabel = plugin?.name?.() ?? id;
+          const pluginDescription = plugin?.description?.() ?? undefined;
+          const isNew = plugin?.addedVersion
+            ? satisfies(packageJson.version, plugin.addedVersion)
+            : false;
 
-        return pluginEnabledMenu(
-          id,
-          pluginLabel,
-          pluginDescription,
-          isNew,
-          true,
-          innerRefreshMenu,
-        );
+          return await pluginEnabledMenu(
+            id,
+            pluginLabel,
+            pluginDescription,
+            isNew,
+            true,
+            innerRefreshMenu,
+          );
+        } catch (error) {
+          console.error('DEBUG: Error processing available plugin:', id, error);
+          return await pluginEnabledMenu(
+            id,
+            id,
+            undefined,
+            false,
+            true,
+            innerRefreshMenu,
+          );
+        }
       }),
   );
 
-  const langResources = await languageResources();
-  const availableLanguages = Object.keys(langResources);
+    console.log('DEBUG: Plugin menus processed:', pluginMenus.length);
 
-  return [
+    console.log('DEBUG: Getting language resources');
+    const langResources = await languageResources();
+    const availableLanguages = Object.keys(langResources);
+    console.log('DEBUG: Available languages:', availableLanguages.length);
+
+    console.log('DEBUG: Building final menu template');
+    const finalMenu = [
     {
       label: t('main.menu.plugins.label'),
       submenu: pluginMenus,
@@ -681,6 +726,258 @@ export const mainMenuTemplate = async (
       submenu: [{ role: 'about' }],
     },
   ];
+    
+    console.log('DEBUG: Menu template generated successfully with', finalMenu.length, 'top-level items');
+    return finalMenu as MenuTemplate;
+    
+  } catch (error) {
+    console.error('ERROR: mainMenuTemplate failed:', error);
+    console.trace(error);
+    
+    // The main menu generation is failing, so let's build a basic working menu
+    console.log('DEBUG: Building basic working menu due to main generation failure');
+    
+    // Get basic plugin list without complex processing
+    let basicPluginMenus = [];
+    try {
+      console.log('DEBUG: Loading plugins for fallback menu');
+      const basicPlugins = await allPlugins();
+      console.log('DEBUG: Found basic plugins:', Object.keys(basicPlugins));
+      
+      if (Object.keys(basicPlugins).length === 0) {
+        console.log('DEBUG: No plugins found, using fallback message');
+        basicPluginMenus = [{
+          label: 'No plugins available',
+          enabled: false,
+          type: 'normal' as const,
+        }];
+      } else {
+        basicPluginMenus = await Promise.all(
+          Object.keys(basicPlugins).map(async (id) => {
+            try {
+              console.log('DEBUG: Processing fallback plugin:', id);
+              const plugin = basicPlugins[id];
+              const pluginName = plugin?.name?.() ?? id;
+              console.log('DEBUG: Plugin name:', pluginName);
+              
+              return await pluginEnabledMenu(
+                id,
+                pluginName,
+                plugin?.description?.() ?? undefined,
+                false,
+                false,
+                () => refreshMenu(win),
+              );
+            } catch (pluginProcessError) {
+              console.error('DEBUG: Error processing plugin:', id, pluginProcessError);
+              // Return a basic menu item for this plugin
+              return {
+                label: id,
+                type: 'checkbox' as const,
+                checked: await config.plugins.isEnabled(id),
+                click(item: MenuItem) {
+                  if (item.checked) {
+                    config.plugins.enable(id);
+                  } else {
+                    config.plugins.disable(id);
+                  }
+                },
+              };
+            }
+          })
+        );
+        console.log('DEBUG: Processed', basicPluginMenus.length, 'plugins for fallback menu');
+      }
+    } catch (pluginError) {
+      console.error('DEBUG: Failed to load basic plugins:', pluginError);
+      basicPluginMenus = [{
+        label: 'No plugins available - error loading',
+        enabled: false,
+        type: 'normal' as const,
+      }];
+    }
+    
+    return [
+      {
+        label: t('main.menu.plugins.label'),
+        submenu: basicPluginMenus,
+      },
+      {
+        label: t('main.menu.options.label'),
+        submenu: [
+          {
+            label: t('main.menu.options.submenu.auto-update'),
+            type: 'checkbox',
+            checked: config.get('options.autoUpdates'),
+            click(item: MenuItem) {
+              config.setMenuOption('options.autoUpdates', item.checked);
+            },
+          },
+          {
+            label: t('main.menu.options.submenu.resume-on-start'),
+            type: 'checkbox',
+            checked: config.get('options.resumeOnStart'),
+            click(item: MenuItem) {
+              config.setMenuOption('options.resumeOnStart', item.checked);
+            },
+          },
+          {
+            label: t('main.menu.options.submenu.always-on-top'),
+            type: 'checkbox',
+            checked: config.get('options.alwaysOnTop'),
+            click(item: MenuItem) {
+              config.setMenuOption('options.alwaysOnTop', item.checked);
+              win.setAlwaysOnTop(item.checked);
+            },
+          },
+          {
+            label: t('main.menu.options.submenu.start-at-login'),
+            type: 'checkbox',
+            checked: config.get('options.startAtLogin'),
+            click(item: MenuItem) {
+              config.setMenuOption('options.startAtLogin', item.checked);
+            },
+          },
+          {
+            label: t('main.menu.options.submenu.start-minimized'),
+            type: 'checkbox',
+            checked: config.get('options.startMinimized'),
+            click(item: MenuItem) {
+              // Note: startMinimized is not in the config type definition, but exists in defaults
+              config.set('options.startMinimized', item.checked);
+            },
+          },
+          { type: 'separator' },
+          {
+            label: t('main.menu.options.submenu.advanced-options.label'),
+            submenu: [
+              {
+                label: t('main.menu.options.submenu.advanced-options.submenu.override-user-agent'),
+                type: 'checkbox',
+                checked: config.get('options.overrideUserAgent'),
+                click(item: MenuItem) {
+                  config.setMenuOption('options.overrideUserAgent', item.checked);
+                },
+              },
+              {
+                label: t('main.menu.options.submenu.advanced-options.submenu.disable-hardware-acceleration'),
+                type: 'checkbox',
+                checked: config.get('options.disableHardwareAcceleration'),
+                click(item: MenuItem) {
+                  config.setMenuOption('options.disableHardwareAcceleration', item.checked);
+                },
+              },
+              {
+                label: t('main.menu.options.submenu.advanced-options.submenu.restart-on-config-changes'),
+                type: 'checkbox',
+                checked: config.get('options.restartOnConfigChanges'),
+                click(item: MenuItem) {
+                  config.setMenuOption('options.restartOnConfigChanges', item.checked);
+                },
+              },
+              { type: 'separator' },
+              {
+                label: t('main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools'),
+                click() {
+                  const { webContents } = win;
+                  if (webContents.isDevToolsOpened()) {
+                    webContents.closeDevTools();
+                  } else {
+                    webContents.openDevTools();
+                  }
+                },
+              },
+              {
+                label: t('main.menu.options.submenu.advanced-options.submenu.edit-config-json'),
+                click() {
+                  config.edit();
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        label: t('main.menu.view.label'),
+        submenu: [
+          {
+            label: t('main.menu.view.submenu.reload'),
+            role: 'reload',
+          },
+          {
+            label: t('main.menu.view.submenu.force-reload'),
+            role: 'forceReload',
+          },
+          { type: 'separator' },
+          {
+            label: t('main.menu.view.submenu.zoom-in'),
+            role: 'zoomIn',
+            accelerator: 'CmdOrCtrl+Plus',
+          },
+          {
+            label: t('main.menu.view.submenu.zoom-out'),
+            role: 'zoomOut',
+            accelerator: 'CmdOrCtrl+-',
+          },
+          {
+            label: t('main.menu.view.submenu.reset-zoom'),
+            role: 'resetZoom',
+          },
+          { type: 'separator' },
+          {
+            label: t('main.menu.view.submenu.toggle-fullscreen'),
+            role: 'togglefullscreen',
+          },
+        ],
+      },
+      {
+        label: t('main.menu.navigation.label'),
+        submenu: [
+          {
+            label: t('main.menu.navigation.submenu.go-back'),
+            accelerator: 'CmdOrCtrl+Left',
+            click() {
+              if (win.webContents.navigationHistory.canGoBack()) {
+                win.webContents.navigationHistory.goBack();
+              }
+            },
+          },
+          {
+            label: t('main.menu.navigation.submenu.go-forward'),
+            accelerator: 'CmdOrCtrl+Right',
+            click() {
+              if (win.webContents.navigationHistory.canGoForward()) {
+                win.webContents.navigationHistory.goForward();
+              }
+            },
+          },
+          { type: 'separator' },
+          {
+            label: t('main.menu.navigation.submenu.copy-current-url'),
+            accelerator: 'CmdOrCtrl+L',
+            click() {
+              const currentURL = win.webContents.getURL();
+              clipboard.writeText(currentURL);
+            },
+          },
+          { type: 'separator' },
+          {
+            label: t('main.menu.navigation.submenu.restart'),
+            click: restart,
+          },
+          {
+            label: t('main.menu.navigation.submenu.quit'),
+            accelerator: 'CmdOrCtrl+Q',
+            role: 'quit',
+          },
+        ],
+      },
+      {
+        label: t('main.menu.about'),
+        submenu: [{ role: 'about' }],
+      },
+    ] as MenuTemplate;
+  }
 };
 export const setApplicationMenu = async (win: Electron.BrowserWindow) => {
   const menuTemplate: MenuTemplate = [...(await mainMenuTemplate(win))];

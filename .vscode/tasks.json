@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build macOS app with fixed menu",
+			"type": "shell",
+			"command": "pnpm build && pnpm exec electron-builder --mac --publish never"
+		}
+	]
+}

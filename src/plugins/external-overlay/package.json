@@ -1,0 +1,11 @@
+{
+  "name": "external-overlay",
+  "version": "1.0.0",
+  "description": "External overlay plugin for DJAMMS that displays current track information",
+  "main": "index.js",
+  "author": "DJAMMS",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

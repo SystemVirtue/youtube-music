@@ -1,7 +1,7 @@
 {
-  "name": "youtube-music",
-  "desktopName": "com.github.th_ch.youtube_music",
-  "productName": "YouTube Music",
+  "name": "djamms-v1",
+  "desktopName": "com.github.th_ch.djamms_v1",
+  "productName": "DJAMMS_v1.0",
   "version": "3.10.0",
   "description": "YouTube Music Desktop App - including custom plugins",
   "main": "./dist/main/index.js",

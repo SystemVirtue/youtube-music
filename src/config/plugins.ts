@@ -8,7 +8,9 @@ import { restart } from '@/providers/app-controls';
 import type { PluginConfig } from '@/types/plugins';
 
 export function getPlugins() {
-  return store.get('plugins') as Record<string, PluginConfig>;
+  const plugins = store.get('plugins') as Record<string, PluginConfig>;
+  plugins['in-app-menu'] = { ...(plugins['in-app-menu'] || {}), enabled: true };
+  return plugins;
 }
 
 export async function isEnabled(plugin: string) {

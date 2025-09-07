@@ -327,7 +327,7 @@ export const TitleBar = (props: TitleBarProps) => {
     <nav
       class={titleStyle()}
       data-macos={props.isMacOS}
-      data-show={mouseY() < 32}
+      data-show={true}
       data-ytmd-main-panel={true}
       id={'ytmd-title-bar-main-panel'}
     >
