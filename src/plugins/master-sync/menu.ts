@@ -77,6 +77,55 @@ export const onMenu = async ({
       enabled: false,
     },
     {
+      label: 'Test Connection',
+      type: 'normal',
+      enabled: config.enabled,
+      async click() {
+        const currentConfig = await getConfig();
+        const targetHost = currentConfig.role === 'SLAVE' ? '127.0.0.1' : currentConfig.slaveHost;
+        const port = currentConfig.slavePort || 26538;
+        const url = `http://${targetHost}:${port}/api/v1/song`;
+
+        const timeoutMs = 3000;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+          // First attempt without explicit auth header
+          let res = await fetch(url, { signal: controller.signal } as any);
+
+          // If we get 403 and have a stored token, retry with it
+          if (res.status === 403 && currentConfig.slaveAuthToken) {
+            res = await fetch(url, { signal: controller.signal, headers: { Authorization: `Bearer ${currentConfig.slaveAuthToken}` } } as any);
+          }
+
+          clearTimeout(timeout);
+
+          if (res.ok) {
+            const json = (await res.json().catch(() => null)) as any;
+            const title = json?.title || json?.videoDetails?.title || json?.name || (json && JSON.stringify(json).slice(0, 200));
+            await dialog.showMessageBox(window, {
+              message: `Connection successful to ${targetHost}:${port}` + (title ? `\nSong info: ${title}` : ''),
+            });
+          } else if (res.status === 403) {
+            await dialog.showMessageBox(window, { type: 'error', message: `Unauthorized (403). Consider requesting an authorization token from the SLAVE (Plugins → Master Sync → Authorization → Request Authorization Token).` });
+          } else {
+            const text = await res.text().catch(() => '');
+            await dialog.showMessageBox(window, { type: 'error', message: `Connection failed: HTTP ${res.status} ${res.statusText}\n${text}` });
+          }
+        } catch (err: any) {
+          clearTimeout(timeout);
+          if (err && err.name === 'AbortError') {
+            await dialog.showMessageBox(window, { type: 'error', message: `Connection timed out after ${timeoutMs}ms` });
+          } else {
+            await dialog.showMessageBox(window, { type: 'error', message: `Connection error: ${err?.message ?? String(err)}` });
+          }
+        } finally {
+          clearTimeout(timeout);
+        }
+      },
+    },
+    {
       type: 'separator',
     },
     {
