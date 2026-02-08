@@ -1,6 +1,9 @@
 import { createPlugin } from '@/utils';
+import { onMenu } from './menu';
 
-interface MasterSyncConfig {
+import masterSyncStyle from './master-sync.css?inline';
+
+export type MasterSyncConfig = {
   enabled: boolean;
   slaveHost: string;
   slavePort: number;
@@ -8,7 +11,7 @@ interface MasterSyncConfig {
   syncInterval: number;
   syncPlayPause: boolean;
   logDebug: boolean;
-}
+};
 
 export default createPlugin({
   name: () => 'Master Sync',
@@ -22,52 +25,9 @@ export default createPlugin({
     syncPlayPause: true,
     logDebug: false,
   } as MasterSyncConfig,
+  stylesheets: [masterSyncStyle],
   
-  menu: async ({ getConfig, setConfig }) => {
-    const config = await getConfig();
-    
-    return [
-      {
-        label: 'Master Sync',
-        submenu: [
-          {
-            label: config.enabled ? '✓ Enabled' : 'Disabled',
-            type: 'checkbox',
-            checked: config.enabled,
-            click: () => {
-              setConfig({ enabled: !config.enabled } as Partial<MasterSyncConfig>);
-            },
-          },
-          {
-            type: 'separator',
-          },
-          {
-            label: 'Sync Play/Pause',
-            type: 'checkbox',
-            checked: config.syncPlayPause,
-            click: () => {
-              setConfig({ syncPlayPause: !config.syncPlayPause } as Partial<MasterSyncConfig>);
-            },
-          },
-          {
-            label: 'Debug Logging',
-            type: 'checkbox',
-            checked: config.logDebug,
-            click: () => {
-              setConfig({ logDebug: !config.logDebug } as Partial<MasterSyncConfig>);
-            },
-          },
-          {
-            type: 'separator',
-          },
-          {
-            label: `Slave: ${config.slaveHost}:${config.slavePort}`,
-            enabled: false,
-          },
-        ],
-      },
-    ];
-  },
+  menu: onMenu,
 
   backend: {
     start({ getConfig, ipc }) {
