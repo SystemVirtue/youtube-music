@@ -47,7 +47,9 @@ import type {
   Playlist,
 } from 'node_modules/\u0079\u006f\u0075\u0074\u0075\u0062\u0065i.js/dist/src/parser/ytmusic';
 
-type CustomSongInfo = SongInfo & { trackId?: string };
+import type * as Types from 'youtubei.js/dist/src/types';
+
+type CustomSongInfo = SongInfo & { trackId?: string }; 
 
 const ffmpeg = lazy(async () =>
   (await import('@ffmpeg.wasm/main')).createFFmpeg({

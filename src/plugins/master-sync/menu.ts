@@ -1,4 +1,5 @@
 import prompt from 'custom-electron-prompt';
+import { dialog } from 'electron';
 
 import promptOptions from '@/providers/prompt-options';
 
@@ -14,6 +15,34 @@ export const onMenu = async ({
   const config = await getConfig();
 
   return [
+    {
+      label: `Enabled: ${config.enabled ? 'Yes' : 'No'}`,
+      enabled: false,
+    },
+    {
+      label: 'Role',
+      submenu: [
+        {
+          label: 'MASTER',
+          type: 'radio',
+          checked: config.role === 'MASTER',
+          click() {
+            setConfig({ role: 'MASTER' });
+          },
+        },
+        {
+          label: 'SLAVE',
+          type: 'radio',
+          checked: config.role === 'SLAVE',
+          click() {
+            setConfig({ role: 'SLAVE' });
+          },
+        },
+      ],
+    },
+    {
+      type: 'separator',
+    },
     {
       label: 'Configure SLAVE Host',
       type: 'normal',
@@ -33,87 +62,19 @@ export const onMenu = async ({
           )) ?? currentConfig.slaveHost;
 
         if (result && typeof result === 'string' && result.trim()) {
-          // Validate IP address format (basic)
           const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$|^localhost$|^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$/;
           if (!ipRegex.test(result.trim())) {
             alert('Invalid IP address or hostname. Please try again.');
             return;
           }
 
-          setConfig({ ...currentConfig, slaveHost: result.trim() });
+          setConfig({ slaveHost: result.trim() });
         }
       },
     },
     {
-      label: 'Configure SLAVE Port',
-      type: 'normal',
-      async click() {
-        const currentConfig = await getConfig();
-        const result =
-          (await prompt(
-            {
-              title: 'Master Sync - Configure SLAVE Port',
-              label: `Enter SLAVE API Server port (current: ${currentConfig.slavePort}):`,
-              value: currentConfig.slavePort,
-              type: 'counter',
-              counterOptions: { minimum: 1, maximum: 65535 },
-              width: 380,
-              ...promptOptions(),
-            },
-            window,
-          )) ?? currentConfig.slavePort;
-
-        if (result && typeof result === 'number' && result >= 1 && result <= 65535) {
-          setConfig({ ...currentConfig, slavePort: result });
-        }
-      },
-    },
-    {
-      label: 'Configure Authorization Token',
-      type: 'normal',
-      async click() {
-        const currentConfig = await getConfig();
-        const result =
-          (await prompt(
-            {
-              title: 'Master Sync - Configure Authorization Token',
-              label: 'Paste your API Server authorization token:',
-              value: currentConfig.slaveAuthToken ? '••••••••' : '',
-              type: 'input',
-              width: 380,
-              ...promptOptions(),
-            },
-            window,
-          )) ?? '';
-
-        if (result && typeof result === 'string' && result.trim() && result !== '••••••••') {
-          setConfig({ ...currentConfig, slaveAuthToken: result.trim() });
-        }
-      },
-    },
-    {
-      label: 'Configure Sync Interval (ms)',
-      type: 'normal',
-      async click() {
-        const currentConfig = await getConfig();
-        const result =
-          (await prompt(
-            {
-              title: 'Master Sync - Configure Sync Interval',
-              label: `Enter sync interval in milliseconds (current: ${currentConfig.syncInterval}ms):`,
-              value: currentConfig.syncInterval,
-              type: 'counter',
-              counterOptions: { minimum: 500, maximum: 60000 },
-              width: 380,
-              ...promptOptions(),
-            },
-            window,
-          )) ?? currentConfig.syncInterval;
-
-        if (result && typeof result === 'number' && result >= 500) {
-          setConfig({ ...currentConfig, syncInterval: result });
-        }
-      },
+      label: `Device IP: ${config.slaveHost}`,
+      enabled: false,
     },
     {
       type: 'separator',
@@ -138,11 +99,51 @@ export const onMenu = async ({
       type: 'separator',
     },
     {
-      label: `Connection: ${config.slaveHost}:${config.slavePort}`,
-      enabled: false,
+      label: 'Authorization',
+      submenu: [
+        {
+          label: 'Request Authorization Token',
+          type: 'normal',
+          async click() {
+            const currentConfig = await getConfig();
+            const url = `http://${currentConfig.slaveHost}:${currentConfig.slavePort}/auth/master-sync`;
+            try {
+              const res = await fetch(url, { method: 'POST' });
+              if (!res.ok) {
+                await dialog.showMessageBox(window, { type: 'error', message: `Token request failed: ${res.status} ${res.statusText}` });
+                return;
+              }
+              const json = (await res.json()) as { accessToken?: string };
+              const token = json.accessToken;
+              if (token) {
+                setConfig({ slaveAuthToken: token });
+                await dialog.showMessageBox(window, { message: 'Authorization token received and saved.' });
+              } else {
+                await dialog.showMessageBox(window, { type: 'error', message: 'No token received from SLAVE.' });
+              }
+            } catch (err: any) {
+              await dialog.showMessageBox(window, { type: 'error', message: `Failed to request token: ${err.message}` });
+            }
+          },
+        },
+        {
+          label: 'Clear Authorization Token',
+          type: 'normal',
+          click() {
+            setConfig({ slaveAuthToken: '' });
+          },
+        },
+        {
+          label: `Auth token: ${config.slaveAuthToken ? 'Set' : 'Not set'}`,
+          enabled: false,
+        },
+      ],
     },
     {
-      label: config.slaveAuthToken ? '✓ Authorization Token Set' : '✗ No Token Set',
+      type: 'separator',
+    },
+    {
+      label: `Role: ${config.role} — Device IP: ${config.slaveHost}`,
       enabled: false,
     },
   ];

@@ -3,27 +3,33 @@ import { onMenu } from './menu';
 
 import masterSyncStyle from './master-sync.css?inline';
 
+export type Role = 'MASTER' | 'SLAVE';
+
 export type MasterSyncConfig = {
   enabled: boolean;
+  role: Role;
   slaveHost: string;
   slavePort: number;
-  slaveAuthToken: string;
   syncInterval: number;
   syncPlayPause: boolean;
   logDebug: boolean;
+  slaveAuthToken?: string;
 };
+
+const STATIC_AUTH_TOKEN = 'peard-static-token';
 
 export default createPlugin({
   name: () => 'Master Sync',
   restartNeeded: false,
   config: {
     enabled: false,
+    role: 'MASTER',
     slaveHost: '192.168.1.100',
     slavePort: 26538,
-    slaveAuthToken: '',
     syncInterval: 2000,
     syncPlayPause: true,
     logDebug: false,
+    slaveAuthToken: '',
   } as MasterSyncConfig,
   stylesheets: [masterSyncStyle],
   
@@ -45,14 +51,14 @@ export default createPlugin({
 
       // Validate configuration
       const validateConfig = (config: MasterSyncConfig): string | null => {
-        if (!config.slaveHost || !config.slaveHost.trim()) {
-          return 'SLAVE host is required';
-        }
-        if (config.slavePort < 1 || config.slavePort > 65535) {
-          return 'SLAVE port must be between 1 and 65535';
-        }
-        if (!config.slaveAuthToken || !config.slaveAuthToken.trim()) {
-          return 'Authorization token is required';
+        // Only require slaveHost when acting as MASTER
+        if (config.role === 'MASTER') {
+          if (!config.slaveHost || !config.slaveHost.trim()) {
+            return 'SLAVE host is required when ROLE is MASTER';
+          }
+          if (config.slavePort < 1 || config.slavePort > 65535) {
+            return 'SLAVE port must be between 1 and 65535';
+          }
         }
         if (config.syncInterval < 500) {
           return 'Sync interval must be at least 500ms';
@@ -84,10 +90,20 @@ export default createPlugin({
               method,
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.slaveAuthToken}`,
               },
               timeout: 5000,
             };
+
+            // Prefer stored token when available (set via menu request), otherwise fall back to static token
+            const cfgForAuth = await getConfig();
+            const token = cfgForAuth.slaveAuthToken && cfgForAuth.slaveAuthToken.trim()
+              ? cfgForAuth.slaveAuthToken
+              : STATIC_AUTH_TOKEN;
+
+            if (token) {
+              // @ts-ignore - RequestInit.headers is a loose map in Node fetch
+              options.headers['Authorization'] = `Bearer ${token}`;
+            }
 
             if (body !== undefined) {
               options.body = JSON.stringify(body);
@@ -129,23 +145,45 @@ export default createPlugin({
       // IPC handler to receive state updates from renderer
       ipc.handle('master-sync:update-state', async (_event: any, state: any) => {
         try {
+          if (!state) {
+            await log('Received empty state update, ignoring');
+            return { success: false, error: 'No state provided' };
+          }
+
           const config = await getConfig();
           if (!config.enabled) return { success: false, error: 'Plugin disabled' };
+          if (config.role !== 'MASTER') return { success: false, error: 'Plugin not running as MASTER' };
 
           const { songId, isPaused, queueHash, videoId } = state;
 
           await log('State update received:', state);
 
-          // Sync song change
+          // Sync song change: ensure the slave plays the same track
           if (songId && songId !== lastSongId && videoId) {
             await log(`Song changed to: ${songId} (${videoId})`);
-            
-            const result = await callSlaveAPI('/api/v1/play', 'POST', { videoId });
-            if (!result.success) {
-              await log(`Failed to play song: ${result.error}`);
+
+            const cfg = await getConfig();
+            if (cfg.role !== 'MASTER') {
+              await log('Skipping song sync because role is not MASTER');
             } else {
-              lastSongId = songId;
-              await log('Song synced successfully');
+              // Strategy: clear slave queue, add the single video, then start playback
+              const clearResult = await callSlaveAPI('/api/v1/queue', 'DELETE');
+              if (!clearResult.success) {
+                await log(`Failed to clear slave queue: ${clearResult.error}`);
+              }
+
+              const addResult = await callSlaveAPI('/api/v1/queue', 'POST', { videoId });
+              if (!addResult.success) {
+                await log(`Failed to add video to slave queue: ${addResult.error}`);
+              } else {
+                const playResult = await callSlaveAPI('/api/v1/play', 'POST');
+                if (!playResult.success) {
+                  await log(`Failed to start playback on slave: ${playResult.error}`);
+                } else {
+                  lastSongId = songId;
+                  await log('Song synced successfully');
+                }
+              }
             }
           }
 
@@ -153,13 +191,18 @@ export default createPlugin({
           if (config.syncPlayPause && isPaused !== null && isPaused !== lastPausedState) {
             await log(`Playback state changed to: ${isPaused ? 'paused' : 'playing'}`);
             
-            const endpoint = isPaused ? '/api/v1/pause' : '/api/v1/play';
-            const result = await callSlaveAPI(endpoint, 'POST');
-            if (!result.success) {
-              await log(`Failed to sync playback state: ${result.error}`);
+            const cfg = await getConfig();
+            if (cfg.role !== 'MASTER') {
+              await log('Skipping play/pause sync because role is not MASTER');
             } else {
-              lastPausedState = isPaused;
-              await log('Playback state synced successfully');
+              const endpoint = isPaused ? '/api/v1/pause' : '/api/v1/play';
+              const result = await callSlaveAPI(endpoint, 'POST');
+              if (!result.success) {
+                await log(`Failed to sync playback state: ${result.error}`);
+              } else {
+                lastPausedState = isPaused;
+                await log('Playback state synced successfully');
+              }
             }
           }
 
@@ -189,18 +232,18 @@ export default createPlugin({
 
           await log('Syncing queue with', queue.length, 'items');
 
-          // Clear existing queue on slave
-          const clearResult = await callSlaveAPI('/api/v1/queue/clear', 'POST');
+          // Clear existing queue on slave (DELETE /api/v1/queue)
+          const clearResult = await callSlaveAPI('/api/v1/queue', 'DELETE');
           if (!clearResult.success) {
             await log(`Failed to clear queue: ${clearResult.error}`);
             return clearResult;
           }
 
-          // Add songs to queue
+          // Add songs to queue (POST /api/v1/queue)
           let successCount = 0;
           for (const item of queue) {
             if (item.videoId) {
-              const addResult = await callSlaveAPI('/api/v1/queue/add', 'POST', {
+              const addResult = await callSlaveAPI('/api/v1/queue', 'POST', {
                 videoId: item.videoId,
               });
               if (addResult.success) {
@@ -218,7 +261,8 @@ export default createPlugin({
       });
 
       // Periodic sync check (as backup)
-      const startPeriodicSync = async () => {
+      let startPeriodicSync: (() => Promise<void>) | null = null;
+      startPeriodicSync = async () => {
         const config = await getConfig();
         
         // Clear existing interval
@@ -227,7 +271,8 @@ export default createPlugin({
           syncIntervalId = null;
         }
 
-        if (config.enabled) {
+        // Only start when plugin is enabled and ROLE is MASTER
+        if (config.enabled && config.role === 'MASTER') {
           // Validate config before starting
           const validationError = validateConfig(config);
           if (validationError) {
@@ -252,17 +297,22 @@ export default createPlugin({
               console.error('[Master Sync] Failed to send state request:', error);
             }
           }, config.syncInterval);
+        } else {
+          await log('Periodic sync not started (plugin disabled or not MASTER)');
         }
       };
 
       // Start sync after a short delay to ensure renderer is ready
       setTimeout(() => {
-        startPeriodicSync().catch(error => {
+        startPeriodicSync?.().catch((error: any) => {
           console.error('[Master Sync] Failed to start periodic sync:', error);
         });
       }, 1000);
 
       // Handle config changes
+      // Expose a hook so onConfigChange can restart the periodic sync
+      (this as any)._startPeriodicSync = startPeriodicSync;
+
       Promise.resolve(getConfig()).then((config: MasterSyncConfig) => {
         if (config.enabled) {
           log('Master Sync plugin started');
