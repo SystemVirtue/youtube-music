@@ -94,8 +94,8 @@ export const onMenu = async ({
           // First attempt without explicit auth header
           let res = await fetch(url, { signal: controller.signal } as any);
 
-          // If we get 403 and have a stored token, retry with it
-          if (res.status === 403 && currentConfig.slaveAuthToken) {
+          // If we get 401 or 403 and have a stored token, retry with it
+          if ((res.status === 403 || res.status === 401) && currentConfig.slaveAuthToken) {
             res = await fetch(url, { signal: controller.signal, headers: { Authorization: `Bearer ${currentConfig.slaveAuthToken}` } } as any);
           }
 

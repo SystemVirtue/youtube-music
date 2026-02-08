@@ -114,8 +114,8 @@ export default createPlugin({
             await log(`API ${method} ${endpoint}`, body);
             const response = await fetch(url, options);
             
-            // If we're unauthorized and autoRequestToken is enabled, try to request an auth token from the slave
-            if (!response.ok && response.status === 403) {
+            // If we're unauthorized (401/403) and autoRequestToken is enabled, try to request an auth token from the slave
+            if (!response.ok && (response.status === 403 || response.status === 401)) {
               const cfg = await getConfig();
               if (cfg.autoRequestToken) {
                 await log('Received 403 from slave, attempting to request token via /auth/master-sync');
