@@ -134,6 +134,17 @@ export const onMenu = async ({
           },
         },
         {
+          type: 'separator',
+        },
+        {
+          label: 'Auto-request token on 403',
+          type: 'checkbox',
+          checked: config.autoRequestToken,
+          click() {
+            setConfig({ autoRequestToken: !config.autoRequestToken });
+          },
+        },
+        {
           label: `Auth token: ${config.slaveAuthToken ? 'Set' : 'Not set'}`,
           enabled: false,
         },

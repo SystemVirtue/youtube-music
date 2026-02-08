@@ -14,6 +14,7 @@ export type MasterSyncConfig = {
   syncPlayPause: boolean;
   logDebug: boolean;
   slaveAuthToken?: string;
+  autoRequestToken?: boolean;
 };
 
 const STATIC_AUTH_TOKEN = 'peard-static-token';
@@ -30,13 +31,14 @@ export default createPlugin({
     syncPlayPause: true,
     logDebug: false,
     slaveAuthToken: '',
+    autoRequestToken: false,
   } as MasterSyncConfig,
   stylesheets: [masterSyncStyle],
   
   menu: onMenu,
 
   backend: {
-    start({ getConfig, ipc }) {
+    start({ getConfig, setConfig, ipc }) {
       let syncIntervalId: ReturnType<typeof setInterval> | null = null;
       let lastSongId: string | null = null;
       let lastPausedState: boolean | null = null;
@@ -112,6 +114,37 @@ export default createPlugin({
             await log(`API ${method} ${endpoint}`, body);
             const response = await fetch(url, options);
             
+            // If we're unauthorized and autoRequestToken is enabled, try to request an auth token from the slave
+            if (!response.ok && response.status === 403) {
+              const cfg = await getConfig();
+              if (cfg.autoRequestToken) {
+                await log('Received 403 from slave, attempting to request token via /auth/master-sync');
+                try {
+                  const authUrl = `http://${cfg.slaveHost}:${cfg.slavePort}/auth/master-sync`;
+                  const authRes = await fetch(authUrl, { method: 'POST' } as any);
+                  if (authRes.ok) {
+                    const json = (await authRes.json().catch(() => ({}))) as { accessToken?: string };
+                    const token = json.accessToken;
+                    if (token) {
+                      await log('Received token from slave, saving to config');
+                      await setConfig({ slaveAuthToken: token });
+                      // Retry immediately once with new token
+                      // Rebuild options with new token
+                      const retryOptions = { ...options } as any;
+                      retryOptions.headers = { ...retryOptions.headers, Authorization: `Bearer ${token}` };
+                      const retryResp = await fetch(url, retryOptions);
+                      if (retryResp.ok) {
+                        const data = await retryResp.json().catch(() => ({}));
+                        return { success: true, data };
+                      }
+                    }
+                  }
+                } catch (authErr: any) {
+                  await log(`Token request failed: ${authErr.message}`);
+                }
+              }
+            }
+
             if (!response.ok) {
               const errorText = await response.text().catch(() => '');
               throw new Error(`HTTP ${response.status}: ${errorText}`);
@@ -133,14 +166,9 @@ export default createPlugin({
             }
           }
         }
-        
+
         return { success: false, error: 'Max retries reached' };
       };
-
-      // IPC handler to get current song from renderer
-      ipc.handle('master-sync:get-state', async () => {
-        return { lastSongId, lastPausedState, lastQueueHash };
-      });
 
       // IPC handler to receive state updates from renderer
       ipc.handle('master-sync:update-state', async (_event: any, state: any) => {

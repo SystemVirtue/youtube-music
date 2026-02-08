@@ -138,8 +138,7 @@ From Pear Desktop, open the Plugins menu → Master Sync → Authorization → R
 | `enabled` | Enable/disable the plugin | `false` |
 | `slaveHost` | IP address of SLAVE computer | `192.168.1.100` |
 | `slavePort` | Port of API Server on SLAVE | `26538` |
-| `slaveAuthToken` | Authorization token from SLAVE | `""` (empty) |
-| `syncInterval` | How often to check for changes (ms) | `2000` |
+| `slaveAuthToken` | Authorization token from SLAVE | `""` (empty) |- `autoRequestToken` | Automatically request a token from the SLAVE when a 403 is encountered (opt-in) | `false` || `syncInterval` | How often to check for changes (ms) | `2000` |
 | `syncPlayPause` | Sync play/pause state | `true` |
 | `logDebug` | Enable debug logging | `false` |
 

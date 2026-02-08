@@ -47,7 +47,7 @@ import type {
   Playlist,
 } from 'node_modules/\u0079\u006f\u0075\u0074\u0075\u0062\u0065i.js/dist/src/parser/ytmusic';
 
-import type * as Types from 'youtubei.js/dist/src/types';
+
 
 type CustomSongInfo = SongInfo & { trackId?: string }; 
 
@@ -60,7 +60,7 @@ const ffmpeg = lazy(async () =>
 );
 const ffmpegMutex = new Mutex();
 
-Platform.shim.eval = async (data: Types.BuildScriptResult, env: Record<string, Types.VMPrimative>) => {
+Platform.shim.eval = async (data: any, env: Record<string, any>) => {
   const properties = [];
 
   if(env.n) {
