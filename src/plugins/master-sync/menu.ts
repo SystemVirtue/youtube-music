@@ -107,8 +107,61 @@ export const onMenu = async ({
             await dialog.showMessageBox(window, {
               message: `Connection successful to ${targetHost}:${port}` + (title ? `\nSong info: ${title}` : ''),
             });
-          } else if (res.status === 403) {
-            await dialog.showMessageBox(window, { type: 'error', message: `Unauthorized (403). Consider requesting an authorization token from the SLAVE (Plugins → Master Sync → Authorization → Request Authorization Token).` });
+          } else if (res.status === 403 || res.status === 401) {
+            // Offer to request a new token from the SLAVE
+            const choice = await dialog.showMessageBox(window, {
+              type: 'warning',
+              buttons: ['Request token', 'Cancel'],
+              defaultId: 0,
+              cancelId: 1,
+              message: `Unauthorized (${res.status}). Would you like to request an authorization token from ${targetHost}:${port}? This will prompt the user on that machine.`,
+            });
+
+            if (choice.response === 0) {
+              try {
+                const authRes = await fetch(`http://${targetHost}:${port}/auth/master-sync`, { method: 'POST' } as any);
+                if (!authRes.ok) {
+                  await dialog.showMessageBox(window, { type: 'error', message: `Token request failed: ${authRes.status} ${authRes.statusText}` });
+                } else {
+                  const authJson = (await authRes.json().catch(() => ({}))) as { accessToken?: string };
+                  const token = authJson.accessToken;
+                  if (token) {
+                    // Offer to persist the token
+                    const saveChoice = await dialog.showMessageBox(window, {
+                      type: 'question',
+                      buttons: ['Save token', "Don't save"],
+                      defaultId: 0,
+                      cancelId: 1,
+                      message: 'Authorization token received. Do you want to save it to Master Sync configuration?',
+                    });
+
+                    if (saveChoice.response === 0) {
+                      await setConfig({ slaveAuthToken: token });
+                      await dialog.showMessageBox(window, { message: 'Authorization token saved.' });
+                    } else {
+                      await dialog.showMessageBox(window, { message: 'Authorization token was not saved.' });
+                    }
+
+                    // Try the original request again using the new token
+                    const retryRes = await fetch(url, { signal: controller.signal, headers: { Authorization: `Bearer ${token}` } } as any);
+                    if (retryRes.ok) {
+                      const json2 = (await retryRes.json().catch(() => null)) as any;
+                      const title2 = json2?.title || json2?.videoDetails?.title || json2?.name || (json2 && JSON.stringify(json2).slice(0, 200));
+                      await dialog.showMessageBox(window, { message: `Connection successful to ${targetHost}:${port}` + (title2 ? `\nSong info: ${title2}` : '') });
+                    } else {
+                      const text2 = await retryRes.text().catch(() => '');
+                      await dialog.showMessageBox(window, { type: 'error', message: `Connection failed after token request: HTTP ${retryRes.status} ${retryRes.statusText}\n${text2}` });
+                    }
+                  } else {
+                    await dialog.showMessageBox(window, { type: 'error', message: 'No token returned from SLAVE.' });
+                  }
+                }
+              } catch (authErr: any) {
+                await dialog.showMessageBox(window, { type: 'error', message: `Failed to request token: ${authErr?.message ?? String(authErr)}` });
+              }
+            } else {
+              await dialog.showMessageBox(window, { type: 'info', message: 'Test cancelled.' });
+            }
           } else {
             const text = await res.text().catch(() => '');
             await dialog.showMessageBox(window, { type: 'error', message: `Connection failed: HTTP ${res.status} ${res.statusText}\n${text}` });
