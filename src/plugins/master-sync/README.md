@@ -40,7 +40,9 @@ This plugin allows you to synchronize playback from a MASTER YouTube Music Deskt
 5. Note your computer's local IP address:
    - Windows: Open CMD → type `ipconfig` → look for "IPv4 Address"
    - Mac/Linux: Open Terminal → type `ifconfig` → look for "inet" under your network adapter
-6. Get your authorization token:
+6. Get your authorization token (Menu):
+
+From Pear Desktop, open the Plugins menu → Master Sync → Authorization → Request Authorization Token
    - Open a web browser or use curl
    - Send POST request to: `http://YOUR_IP:26538/auth/YOUR_NAME`
    - Example: `curl -X POST http://192.168.1.100:26538/auth/master`
