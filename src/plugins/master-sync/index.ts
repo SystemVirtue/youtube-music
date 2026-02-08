@@ -11,7 +11,7 @@ interface MasterSyncConfig {
 }
 
 export default createPlugin({
-  name: 'Master Sync',
+  name: () => 'Master Sync',
   restartNeeded: false,
   config: {
     enabled: false,
@@ -35,7 +35,7 @@ export default createPlugin({
             type: 'checkbox',
             checked: config.enabled,
             click: () => {
-              setConfig({ enabled: !config.enabled });
+              setConfig({ enabled: !config.enabled } as Partial<MasterSyncConfig>);
             },
           },
           {
@@ -46,7 +46,7 @@ export default createPlugin({
             type: 'checkbox',
             checked: config.syncPlayPause,
             click: () => {
-              setConfig({ syncPlayPause: !config.syncPlayPause });
+              setConfig({ syncPlayPause: !config.syncPlayPause } as Partial<MasterSyncConfig>);
             },
           },
           {
@@ -54,7 +54,7 @@ export default createPlugin({
             type: 'checkbox',
             checked: config.logDebug,
             click: () => {
-              setConfig({ logDebug: !config.logDebug });
+              setConfig({ logDebug: !config.logDebug } as Partial<MasterSyncConfig>);
             },
           },
           {
@@ -71,7 +71,7 @@ export default createPlugin({
 
   backend: {
     start({ getConfig, ipc }) {
-      let syncIntervalId: NodeJS.Timeout | null = null;
+      let syncIntervalId: ReturnType<typeof setInterval> | null = null;
       let lastSongId: string | null = null;
       let lastPausedState: boolean | null = null;
       let lastQueueHash: string | null = null;
@@ -120,7 +120,7 @@ export default createPlugin({
         
         for (let attempt = 0; attempt < retries; attempt++) {
           try {
-            const options: RequestInit = {
+            const options: RequestInit & { timeout?: number } = {
               method,
               headers: {
                 'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ export default createPlugin({
       });
 
       // IPC handler to receive state updates from renderer
-      ipc.handle('master-sync:update-state', async (_event, state) => {
+      ipc.handle('master-sync:update-state', async (_event: any, state: any) => {
         try {
           const config = await getConfig();
           if (!config.enabled) return { success: false, error: 'Plugin disabled' };
@@ -220,7 +220,7 @@ export default createPlugin({
       });
 
       // IPC handler to sync queue
-      ipc.handle('master-sync:sync-queue', async (_event, queue) => {
+      ipc.handle('master-sync:sync-queue', async (_event: any, queue: any) => {
         try {
           const config = await getConfig();
           if (!config.enabled) {
@@ -303,10 +303,12 @@ export default createPlugin({
       }, 1000);
 
       // Handle config changes
-      getConfig().then((config) => {
+      Promise.resolve(getConfig()).then((config: MasterSyncConfig) => {
         if (config.enabled) {
           log('Master Sync plugin started');
         }
+      }).catch((error: Error) => {
+        console.error('[Master Sync] Failed to get initial config:', error);
       });
     },
 
@@ -317,11 +319,6 @@ export default createPlugin({
 
     stop() {
       console.log('[Master Sync] Plugin stopped');
-      // Clean up intervals on stop
-      if (syncIntervalId) {
-        clearInterval(syncIntervalId);
-        syncIntervalId = null;
-      }
     },
   },
 
@@ -340,7 +337,7 @@ export default createPlugin({
       let currentPausedState: boolean | null = null;
       let currentQueue: any[] = [];
       let domObserver: MutationObserver | null = null;
-      let pollCheckInterval: NodeJS.Timeout | null = null;
+      let pollCheckInterval: ReturnType<typeof setInterval> | null = null;
 
       // Function to compute queue hash
       const computeQueueHash = (queue: any[]) => {
@@ -374,7 +371,7 @@ export default createPlugin({
       });
 
       // Monitor player state changes
-      const observePlayer = async () => {
+      const observePlayer = () => {
         // Try to access the player API
         let checkAttempts = 0;
         const maxCheckAttempts = 30; // 30 seconds (1 per second)

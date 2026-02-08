@@ -113,7 +113,7 @@ You should have received a folder named `master-sync` containing:
 
 ### 2.2 Locate Plugins Directory
 
-Find your YouTube Music plugins folder:
+Find your YouTube Music plugins folder. **If it doesn't exist, create it first.**
 
 **Windows:**
 ```
@@ -121,9 +121,19 @@ Find your YouTube Music plugins folder:
 ```
 Full path: `C:\Users\YourName\AppData\Roaming\YouTube Music\plugins\`
 
+To create if missing:
+1. Open File Explorer
+2. Paste the path above in the address bar
+3. Right-click → New Folder → Name it `plugins`
+
 **macOS:**
 ```
 ~/Library/Application Support/YouTube Music/plugins/
+```
+
+To create if missing, open Terminal and run:
+```bash
+mkdir -p ~/Library/Application\ Support/YouTube\ Music/plugins
 ```
 
 **Linux:**
@@ -131,7 +141,12 @@ Full path: `C:\Users\YourName\AppData\Roaming\YouTube Music\plugins\`
 ~/.config/YouTube Music/plugins/
 ```
 
-**Important:** Create the `plugins` folder if it doesn't exist!
+To create if missing, open Terminal and run:
+```bash
+mkdir -p ~/.config/YouTube\ Music/plugins
+```
+
+**Important:** The `plugins` directory may not exist - you need to create it if it's missing!
 
 ### 2.3 Install Plugin
 

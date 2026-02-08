@@ -1,0 +1,6 @@
+
+> youtube-music@3.11.0 build
+> pnpm electron-vite build
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "electron-vite" not found

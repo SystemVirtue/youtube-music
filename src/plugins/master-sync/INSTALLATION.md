@@ -28,21 +28,37 @@ master-sync/
 
 ### Where to Install the Plugin
 
-Copy the entire `master-sync` folder to your plugins directory:
+Copy the entire `master-sync` folder to your plugins directory. **Create the plugins folder if it doesn't exist.**
 
 **Windows:**
 ```
 C:\Users\[YourUsername]\AppData\Roaming\YouTube Music\plugins\master-sync\
 ```
 
+To create the plugins folder if missing:
+1. Open File Explorer
+2. Navigate to: `C:\Users\[YourUsername]\AppData\Roaming\YouTube Music\`
+3. Right-click → New Folder → Name it `plugins`
+4. Copy `master-sync` folder into it
+
 **macOS:**
 ```
 ~/Library/Application Support/YouTube Music/plugins/master-sync/
 ```
 
+To create the plugins folder if missing, open Terminal and run:
+```bash
+mkdir -p ~/Library/Application\ Support/YouTube\ Music/plugins
+```
+
 **Linux:**
 ```
 ~/.config/YouTube Music/plugins/master-sync/
+```
+
+To create the plugins folder if missing, open Terminal and run:
+```bash
+mkdir -p ~/.config/YouTube\ Music/plugins
 ```
 
 ### Where to Edit Configuration

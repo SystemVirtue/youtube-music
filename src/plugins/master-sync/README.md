@@ -48,7 +48,23 @@ This plugin allows you to synchronize playback from a MASTER YouTube Music Deskt
 
 ### Step 2: Install Master Sync Plugin on MASTER
 
-1. **Copy the plugin folder**:
+1. **Create the plugins folder if it doesn't exist:**
+   
+   **macOS:** 
+   ```bash
+   mkdir -p ~/Library/Application\ Support/YouTube\ Music/plugins
+   ```
+   
+   **Linux:**
+   ```bash
+   mkdir -p ~/.config/YouTube\ Music/plugins
+   ```
+   
+   **Windows:** Use File Explorer to create the folder:
+   - Navigate to: `C:\Users\YourName\AppData\Roaming\YouTube Music\`
+   - Right-click → New Folder → Name it `plugins`
+
+2. **Copy the plugin folder**:
    - Copy the `master-sync` folder to:
      - Windows: `%APPDATA%\YouTube Music\plugins\`
      - macOS: `~/Library/Application Support/YouTube Music/plugins/`
@@ -56,7 +72,7 @@ This plugin allows you to synchronize playback from a MASTER YouTube Music Deskt
    
    Create the `plugins` directory if it doesn't exist.
 
-2. **The folder structure should look like this**:
+3. **The folder structure should look like this**:
    ```
    YouTube Music/
    └── plugins/
@@ -64,7 +80,7 @@ This plugin allows you to synchronize playback from a MASTER YouTube Music Deskt
            └── index.ts
    ```
 
-3. **Restart YouTube Music Desktop** on the MASTER computer
+4. **Restart YouTube Music Desktop** on the MASTER computer
 
 ### Step 3: Configure Master Sync Plugin
 
