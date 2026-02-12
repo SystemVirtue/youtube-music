@@ -74,7 +74,7 @@ export default createPlugin({
         url: string | URL | null,
         async?: boolean,
         username?: string | null,
-        password?: string | null
+        password?: string | null,
       ) {
         if (
           typeof url === 'string' &&
@@ -101,7 +101,7 @@ export default createPlugin({
         return originalXMLHttpRequestOpen.call(
           this,
           method,
-          url,
+          url || '',
           async,
           username,
           password
