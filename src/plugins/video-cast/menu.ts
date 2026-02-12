@@ -22,7 +22,7 @@ export const onMenu = async ({
       setConfig({
         ...config,
         selectedDisplay: display.id.toString(),
-        castEnabled: false,
+        // Don't disable casting when selecting display - let window move or get created
       });
     },
   }));
@@ -51,7 +51,6 @@ export const onMenu = async ({
             setConfig({
               ...config,
               selectedDisplay: '',
-              castEnabled: false,
             });
           },
         },

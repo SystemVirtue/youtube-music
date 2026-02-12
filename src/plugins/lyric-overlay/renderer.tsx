@@ -151,9 +151,11 @@ export const renderer = createRenderer<
   setupLyricObserver() {
     // Watch for the synced-lyrics panel content changes
     const observeTarget = () => {
+      // Try multiple selectors for lyrics panels
       const lyricsPanel = document.querySelector(
         'ytmusic-player-page #tab-renderer',
-      );
+      ) || document.querySelector('[data-lyrics-container]') || document.querySelector('.lyrics-container');
+
       if (!lyricsPanel) {
         // Retry after a delay
         setTimeout(observeTarget, 1000);
@@ -161,27 +163,36 @@ export const renderer = createRenderer<
       }
 
       this.lyricObserver = new MutationObserver(() => {
-        // Find the current lyric line from synced-lyrics
-        const currentLine = document.querySelector(
+        // Try multiple selectors for current lyric line
+        let currentLine = document.querySelector(
           '.synced-lyrics-container .line.current',
+        ) || document.querySelector(
+          '[data-lyrics-current="true"]',
+        ) || document.querySelector(
+          '.lyrics-line.active',
+        ) || document.querySelector(
+          '.lyrics-content .current',
         );
+
+        if (!currentLine) {
+          // Try finding any element with lyrics that has active/highlighted state
+          const lyricsLines = document.querySelectorAll('.lyrics-line, .line, [data-lyrics]');
+          for (const line of lyricsLines) {
+            if (line.classList.contains('current') ||
+                line.classList.contains('active') ||
+                line.classList.contains('highlighted') ||
+                line.getAttribute('data-lyrics-current') === 'true') {
+              currentLine = line;
+              break;
+            }
+          }
+        }
+
         if (currentLine) {
           const text = currentLine.textContent?.trim() ?? '';
-          if (text !== this.currentLyric) {
+          if (text && text !== this.currentLyric) {
             this.currentLyric = text;
             this.setCurrentLyric?.(text);
-          }
-        } else {
-          // Try alternative selectors for lyrics
-          const activeLyric = document.querySelector(
-            '[data-lyrics-current="true"]',
-          );
-          if (activeLyric) {
-            const text = activeLyric.textContent?.trim() ?? '';
-            if (text !== this.currentLyric) {
-              this.currentLyric = text;
-              this.setCurrentLyric?.(text);
-            }
           }
         }
       });
@@ -190,18 +201,28 @@ export const renderer = createRenderer<
         childList: true,
         subtree: true,
         characterData: true,
+        attributes: true,
+        attributeFilter: ['class', 'data-lyrics-current'],
       });
     };
 
     observeTarget();
 
-    // Also listen for IPC events from synced-lyrics if available
-    // This provides a more reliable way to get lyrics
+    // Also listen for custom events from synced-lyrics plugin
     window.addEventListener('synced-lyrics:line-change', ((
       event: CustomEvent<{ text: string }>,
     ) => {
       const text = event.detail?.text ?? '';
       if (text !== this.currentLyric) {
+        this.currentLyric = text;
+        this.setCurrentLyric?.(text);
+      }
+    }) as EventListener);
+
+    // Listen for YouTube's native lyric events
+    window.addEventListener('lyrics-line-change', ((event: any) => {
+      const text = event.detail?.text || event.detail?.line || '';
+      if (text && text !== this.currentLyric) {
         this.currentLyric = text;
         this.setCurrentLyric?.(text);
       }

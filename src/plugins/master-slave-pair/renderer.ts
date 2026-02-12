@@ -21,6 +21,9 @@ export const renderer = createRenderer<
 
     if (this.config.role === InstanceRole.MASTER) {
       this.setupMasterControls(ctx);
+    } else if (this.config.role === InstanceRole.SLAVE) {
+      // Auto-enable video mode for slave
+      this.setVideoMode(true);
     }
   },
 
@@ -47,7 +50,34 @@ export const renderer = createRenderer<
   },
 
   onConfigChange(newConfig) {
+    const oldRole = this.config?.role;
     this.config = newConfig;
+
+    // Auto-enable video mode when switching to slave role
+    if (newConfig.role === InstanceRole.SLAVE && oldRole !== InstanceRole.SLAVE) {
+      this.setVideoMode(true);
+    }
+  },
+
+  setVideoMode(showVideo: boolean) {
+    const player = document.querySelector<HTMLElement>('ytmusic-player');
+    if (player) {
+      player.setAttribute(
+        'playback-mode',
+        showVideo ? 'OMV_PREFERRED' : 'ATV_PREFERRED',
+      );
+
+      // Update video display elements
+      const songVideo = document.querySelector<HTMLElement>('#song-video.ytmusic-player');
+      const songImage = document.querySelector<HTMLElement>('#song-image');
+      
+      if (songVideo) {
+        songVideo.style.display = showVideo ? 'block' : 'none';
+      }
+      if (songImage) {
+        songImage.style.display = showVideo ? 'none' : 'block';
+      }
+    }
   },
 
   setupMasterControls(ctx: RendererContext<MasterSlavePairConfig>) {

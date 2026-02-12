@@ -972,6 +972,7 @@
       "description": "Cast video content to external displays or devices",
       "menu": {
         "display": "Display",
+        "enable-cast": "Enable Cast",
         "select-display": "Select Display",
         "start-cast": "Start Cast",
         "stop-cast": "Stop Cast",
@@ -1011,9 +1012,15 @@
             "bottom": "Bottom"
           }
         },
-        "font-size": "Font Size",
-        "font-color": "Font Color",
-        "background-opacity": "Background Opacity",
+        "font-size": {
+          "label": "Font Size"
+        },
+        "font-color": {
+          "label": "Font Color"
+        },
+        "background-opacity": {
+          "label": "Background Opacity"
+        },
         "style": {
           "label": "Style",
           "submenu": {
@@ -1023,6 +1030,20 @@
           }
         },
         "show-on-video-only": "Show on video only"
+      },
+      "prompt": {
+        "font-size": {
+          "title": "Font Size",
+          "label": "Enter font size (12-72):"
+        },
+        "font-color": {
+          "title": "Font Color", 
+          "label": "Choose font color:"
+        },
+        "background-opacity": {
+          "title": "Background Opacity",
+          "label": "Enter background opacity (0-100%):"
+        }
       },
       "name": "Lyric Overlay"
     },

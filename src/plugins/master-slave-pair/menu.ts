@@ -1,4 +1,5 @@
 import prompt from 'custom-electron-prompt';
+import { networkInterfaces } from 'node:os';
 
 import { t } from '@/i18n';
 import promptOptions from '@/providers/prompt-options';
@@ -8,14 +9,39 @@ import { type MasterSlavePairConfig, InstanceRole } from './config';
 import type { MenuContext } from '@/types/contexts';
 import type { MenuTemplate } from '@/menu';
 
+// Get the local IP address
+function getLocalIPAddress(): string {
+  const interfaces = networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    const iface = interfaces[name];
+    if (!iface) continue;
+    
+    for (const address of iface) {
+      if (address.family === 'IPv4' && !address.internal) {
+        return address.address;
+      }
+    }
+  }
+  return '127.0.0.1'; // fallback
+}
+
 export const onMenu = async ({
   getConfig,
   setConfig,
   window,
 }: MenuContext<MasterSlavePairConfig>): Promise<MenuTemplate> => {
   const config = await getConfig();
+  const localIP = getLocalIPAddress();
 
   return [
+    {
+      label: `This Device's IP Address: ${localIP}`,
+      type: 'normal',
+      enabled: false, // disabled so it's just informational
+    },
+    {
+      type: 'separator',
+    },
     {
       label: t('plugins.master-slave-pair.menu.role.label'),
       type: 'submenu',

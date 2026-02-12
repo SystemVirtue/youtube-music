@@ -67,6 +67,11 @@ export const backend = createBackend<
       this.closeCastWindow();
     }
 
+    // Move window if display changed and window is already open
+    if (newConfig.selectedDisplay !== old?.selectedDisplay && this.castWindow && !this.castWindow.isDestroyed()) {
+      this.moveCastWindowToDisplay(newConfig.selectedDisplay);
+    }
+
     this.oldConfig = newConfig;
   },
 
@@ -189,5 +194,27 @@ export const backend = createBackend<
         config.showOverlay,
       );
     }
+  },
+
+  moveCastWindowToDisplay(displayId: string) {
+    if (!this.castWindow || this.castWindow.isDestroyed()) {
+      return;
+    }
+
+    const displays = screen.getAllDisplays();
+    const targetDisplay = displays.find(
+      (d) => d.id.toString() === displayId,
+    );
+
+    if (!targetDisplay) {
+      console.warn('[video-cast] Target display not found for moving window');
+      return;
+    }
+
+    // Move window to new display position
+    this.castWindow.setPosition(targetDisplay.bounds.x, targetDisplay.bounds.y);
+    this.castWindow.setSize(targetDisplay.bounds.width, targetDisplay.bounds.height, false);
+
+    console.log(`[video-cast] Window moved to display ${displayId}`);
   },
 });
