@@ -5,7 +5,7 @@ import { defaultAdBlockerConfig, type AdBlockerConfig } from './config';
 
 interface AdBlockerRenderer {
   config: AdBlockerConfig | null;
-  start: (ctx: any) => Promise<void>;
+  start: (ctx: { getConfig: () => Promise<AdBlockerConfig> }) => Promise<void>;
   onConfigChange: (newConfig: AdBlockerConfig) => void;
   enableAdBlocking: () => void;
   disableAdBlocking: () => void;
@@ -93,7 +93,7 @@ export default createPlugin({
             this,
             method,
             '',
-            async,
+            async ?? true,
             username,
             password
           );
@@ -138,19 +138,38 @@ export default createPlugin({
       };
 
       // Store references for cleanup
-      (window as unknown as { __adblocker_originalFetch?: typeof fetch }).__adblocker_originalFetch = originalFetch;
-      (window as unknown as { __adblocker_originalXMLHttpRequestOpen?: typeof XMLHttpRequest.prototype.open }).__adblocker_originalXMLHttpRequestOpen = originalXMLHttpRequestOpen;
+      (
+        window as unknown as {
+          __adblocker_originalFetch?: typeof fetch;
+        }
+      ).__adblocker_originalFetch = originalFetch;
+
+      (
+        window as unknown as {
+          __adblocker_originalXMLHttpRequestOpen?: typeof XMLHttpRequest.prototype.open;
+        }
+      ).__adblocker_originalXMLHttpRequestOpen = originalXMLHttpRequestOpen;
     },
 
     unblockAds() {
       // Restore original XMLHttpRequest
-      const originalXMLHttpRequestOpen = (window as unknown as { __adblocker_originalXMLHttpRequestOpen?: typeof XMLHttpRequest.prototype.open }).__adblocker_originalXMLHttpRequestOpen;
+      const originalXMLHttpRequestOpen = (
+        window as unknown as {
+          __adblocker_originalXMLHttpRequestOpen?: typeof XMLHttpRequest.prototype.open;
+        }
+      ).__adblocker_originalXMLHttpRequestOpen;
+
       if (originalXMLHttpRequestOpen) {
         XMLHttpRequest.prototype.open = originalXMLHttpRequestOpen;
       }
 
       // Restore fetch
-      const originalFetch = (window as unknown as { __adblocker_originalFetch?: typeof fetch }).__adblocker_originalFetch;
+      const originalFetch = (
+        window as unknown as {
+          __adblocker_originalFetch?: typeof fetch;
+        }
+      ).__adblocker_originalFetch;
+
       if (originalFetch) {
         window.fetch = originalFetch;
       }
