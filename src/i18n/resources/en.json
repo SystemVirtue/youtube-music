@@ -968,6 +968,64 @@
         "button-video": "Video"
       }
     },
+    "video-cast": {
+      "description": "Cast video content to external displays or devices",
+      "menu": {
+        "display": "Display",
+        "select-display": "Select Display",
+        "start-cast": "Start Cast",
+        "stop-cast": "Stop Cast",
+        "show-overlay": "Show Overlay"
+      },
+      "name": "Video Cast"
+    },
+    "master-slave-pair": {
+      "description": "Synchronize playback between master and slave instances for multi-room audio",
+      "menu": {
+        "role": {
+          "label": "Instance Role",
+          "submenu": {
+            "none": "None",
+            "master": "Master",
+            "slave": "Slave"
+          }
+        },
+        "master-host": "Master Host",
+        "master-port": "Master Port", 
+        "slave-host": "Slave Host",
+        "slave-port": "Slave Port",
+        "auto-connect": "Auto Connect",
+        "connect": "Connect",
+        "disconnect": "Disconnect"
+      },
+      "name": "Master-Slave Pair"
+    },
+    "lyric-overlay": {
+      "description": "Display synchronized lyrics as an overlay on the video player",
+      "menu": {
+        "position": {
+          "label": "Position",
+          "submenu": {
+            "top": "Top",
+            "center": "Center", 
+            "bottom": "Bottom"
+          }
+        },
+        "font-size": "Font Size",
+        "font-color": "Font Color",
+        "background-opacity": "Background Opacity",
+        "style": {
+          "label": "Style",
+          "submenu": {
+            "default": "Default",
+            "karaoke": "Karaoke",
+            "minimal": "Minimal"
+          }
+        },
+        "show-on-video-only": "Show on video only"
+      },
+      "name": "Lyric Overlay"
+    },
     "visualizer": {
       "description": "Adds a visualizer to the player",
       "menu": {
