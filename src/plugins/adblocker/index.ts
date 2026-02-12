@@ -3,6 +3,19 @@ import { t } from '@/i18n';
 
 import { defaultAdBlockerConfig, type AdBlockerConfig } from './config';
 
+interface AdBlockerRenderer {
+  config: AdBlockerConfig | null;
+  start: (ctx: any) => Promise<void>;
+  onConfigChange: (newConfig: AdBlockerConfig) => void;
+  enableAdBlocking: () => void;
+  disableAdBlocking: () => void;
+  blockAds: () => void;
+  unblockAds: () => void;
+  hideAdElements: () => void;
+  showAdElements: () => void;
+  stop: () => void;
+}
+
 export default createPlugin({
   name: () => t('plugins.adblocker.name'),
   description: () => t('plugins.adblocker.description'),
@@ -20,7 +33,7 @@ export default createPlugin({
       }
     },
 
-    async onConfigChange(newConfig) {
+    onConfigChange(newConfig) {
       this.config = newConfig;
 
       if (newConfig.enabled) {
@@ -56,40 +69,68 @@ export default createPlugin({
       const originalFetch = window.fetch;
 
       // Intercept XMLHttpRequest and Fetch requests
-      XMLHttpRequest.prototype.open = function(method, url, ...args) {
-        if (typeof url === 'string' && (
-          url.includes('doubleclick.net') ||
-          url.includes('googlesyndication.com') ||
-          url.includes('googleadservices.com') ||
-          url.includes('adsystem.') ||
-          url.includes('amazon-adsystem.com') ||
-          url.includes('facebook.com/tr') ||
-          url.includes('analytics.google.com') ||
-          url.includes('googletagmanager.com') ||
-          url.includes('google-analytics.com')
-        )) {
+      XMLHttpRequest.prototype.open = function (
+        method: string,
+        url: string | URL | null,
+        async?: boolean,
+        username?: string | null,
+        password?: string | null
+      ) {
+        if (
+          typeof url === 'string' &&
+          (url.includes('doubleclick.net') ||
+            url.includes('googlesyndication.com') ||
+            url.includes('googleadservices.com') ||
+            url.includes('adsystem.') ||
+            url.includes('amazon-adsystem.com') ||
+            url.includes('facebook.com/tr') ||
+            url.includes('analytics.google.com') ||
+            url.includes('googletagmanager.com') ||
+            url.includes('google-analytics.com'))
+        ) {
           // Block the request by setting URL to empty
-          args[0] = false;
-          return originalXMLHttpRequestOpen.call(this, method, '', ...args);
+          return originalXMLHttpRequestOpen.call(
+            this,
+            method,
+            '',
+            async,
+            username,
+            password
+          );
         }
-        return originalXMLHttpRequestOpen.call(this, method, url, ...args);
+        return originalXMLHttpRequestOpen.call(
+          this,
+          method,
+          url,
+          async,
+          username,
+          password
+        );
       };
 
       // Override fetch for modern browsers
-      window.fetch = function(input, init) {
-        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
+        const url =
+          typeof input === 'string'
+            ? input
+            : input instanceof URL
+            ? input.href
+            : input instanceof Request
+            ? input.url
+            : '';
 
-        if (url && (
-          url.includes('doubleclick.net') ||
-          url.includes('googlesyndication.com') ||
-          url.includes('googleadservices.com') ||
-          url.includes('adsystem.') ||
-          url.includes('amazon-adsystem.com') ||
-          url.includes('facebook.com/tr') ||
-          url.includes('analytics.google.com') ||
-          url.includes('googletagmanager.com') ||
-          url.includes('google-analytics.com')
-        )) {
+        if (
+          url &&
+          (url.includes('doubleclick.net') ||
+            url.includes('googlesyndication.com') ||
+            url.includes('googleadservices.com') ||
+            url.includes('adsystem.') ||
+            url.includes('amazon-adsystem.com') ||
+            url.includes('facebook.com/tr') ||
+            url.includes('analytics.google.com') ||
+            url.includes('googletagmanager.com') ||
+            url.includes('google-analytics.com'))
+        ) {
           return Promise.reject(new Error('Ad request blocked'));
         }
 
@@ -97,19 +138,19 @@ export default createPlugin({
       };
 
       // Store references for cleanup
-      (window as any).__adblocker_originalFetch = originalFetch;
-      (window as any).__adblocker_originalXMLHttpRequestOpen = originalXMLHttpRequestOpen;
+      (window as unknown as { __adblocker_originalFetch?: typeof fetch }).__adblocker_originalFetch = originalFetch;
+      (window as unknown as { __adblocker_originalXMLHttpRequestOpen?: typeof XMLHttpRequest.prototype.open }).__adblocker_originalXMLHttpRequestOpen = originalXMLHttpRequestOpen;
     },
 
     unblockAds() {
       // Restore original XMLHttpRequest
-      const originalXMLHttpRequestOpen = (window as any).__adblocker_originalXMLHttpRequestOpen;
+      const originalXMLHttpRequestOpen = (window as unknown as { __adblocker_originalXMLHttpRequestOpen?: typeof XMLHttpRequest.prototype.open }).__adblocker_originalXMLHttpRequestOpen;
       if (originalXMLHttpRequestOpen) {
         XMLHttpRequest.prototype.open = originalXMLHttpRequestOpen;
       }
 
       // Restore fetch
-      const originalFetch = (window as any).__adblocker_originalFetch;
+      const originalFetch = (window as unknown as { __adblocker_originalFetch?: typeof fetch }).__adblocker_originalFetch;
       if (originalFetch) {
         window.fetch = originalFetch;
       }
@@ -165,5 +206,5 @@ export default createPlugin({
         this.disableAdBlocking();
       }
     },
-  },
+  } as AdBlockerRenderer,
 });
