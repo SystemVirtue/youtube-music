@@ -147,8 +147,7 @@ export const onMenu = async ({
               ...promptOptions(),
             },
             window,
-          )) ??
-          currentConfig.backgroundOpacity * 100;
+          )) ?? currentConfig.backgroundOpacity * 100;
 
         setConfig({ ...currentConfig, backgroundOpacity: newOpacity / 100 });
       },

@@ -9,6 +9,20 @@ import { type LyricOverlayConfig } from './config';
 import type { RendererContext } from '@/types/contexts';
 import type { MusicPlayer } from '@/types/music-player';
 
+// Define custom event types for lyric events
+interface LyricLineChangeEvent extends Event {
+  detail?: {
+    text?: string;
+    line?: string;
+  };
+}
+
+interface SyncedLyricsLineChangeEvent extends Event {
+  detail?: {
+    text: string;
+  };
+}
+
 // Component for the lyric overlay
 function LyricOverlay(props: {
   text: () => string;
@@ -152,9 +166,10 @@ export const renderer = createRenderer<
     // Watch for the synced-lyrics panel content changes
     const observeTarget = () => {
       // Try multiple selectors for lyrics panels
-      const lyricsPanel = document.querySelector(
-        'ytmusic-player-page #tab-renderer',
-      ) || document.querySelector('[data-lyrics-container]') || document.querySelector('.lyrics-container');
+      const lyricsPanel =
+        document.querySelector('ytmusic-player-page #tab-renderer') ||
+        document.querySelector('[data-lyrics-container]') ||
+        document.querySelector('.lyrics-container');
 
       if (!lyricsPanel) {
         // Retry after a delay
@@ -164,24 +179,24 @@ export const renderer = createRenderer<
 
       this.lyricObserver = new MutationObserver(() => {
         // Try multiple selectors for current lyric line
-        let currentLine = document.querySelector(
-          '.synced-lyrics-container .line.current',
-        ) || document.querySelector(
-          '[data-lyrics-current="true"]',
-        ) || document.querySelector(
-          '.lyrics-line.active',
-        ) || document.querySelector(
-          '.lyrics-content .current',
-        );
+        let currentLine =
+          document.querySelector('.synced-lyrics-container .line.current') ||
+          document.querySelector('[data-lyrics-current="true"]') ||
+          document.querySelector('.lyrics-line.active') ||
+          document.querySelector('.lyrics-content .current');
 
         if (!currentLine) {
           // Try finding any element with lyrics that has active/highlighted state
-          const lyricsLines = document.querySelectorAll('.lyrics-line, .line, [data-lyrics]');
+          const lyricsLines = document.querySelectorAll(
+            '.lyrics-line, .line, [data-lyrics]',
+          );
           for (const line of lyricsLines) {
-            if (line.classList.contains('current') ||
-                line.classList.contains('active') ||
-                line.classList.contains('highlighted') ||
-                line.getAttribute('data-lyrics-current') === 'true') {
+            if (
+              line.classList.contains('current') ||
+              line.classList.contains('active') ||
+              line.classList.contains('highlighted') ||
+              line.getAttribute('data-lyrics-current') === 'true'
+            ) {
               currentLine = line;
               break;
             }
@@ -210,7 +225,7 @@ export const renderer = createRenderer<
 
     // Also listen for custom events from synced-lyrics plugin
     window.addEventListener('synced-lyrics:line-change', ((
-      event: CustomEvent<{ text: string }>,
+      event: SyncedLyricsLineChangeEvent,
     ) => {
       const text = event.detail?.text ?? '';
       if (text !== this.currentLyric) {
@@ -220,7 +235,9 @@ export const renderer = createRenderer<
     }) as EventListener);
 
     // Listen for YouTube's native lyric events
-    window.addEventListener('lyrics-line-change', ((event: any) => {
+    window.addEventListener('lyrics-line-change', ((
+      event: LyricLineChangeEvent,
+    ) => {
       const text = event.detail?.text || event.detail?.line || '';
       if (text && text !== this.currentLyric) {
         this.currentLyric = text;

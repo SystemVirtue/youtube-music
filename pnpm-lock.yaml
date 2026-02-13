@@ -36,6 +36,9 @@ importers:
 
   .:
     dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^8.4.0
+        version: 8.4.0(zod@4.3.6)
       '@dehoist/romanize-thai':
         specifier: 1.0.0
         version: 1.0.0
@@ -51,18 +54,36 @@ importers:
       '@ffmpeg.wasm/main':
         specifier: 0.12.0
         version: 0.12.0
+      '@floating-ui/core':
+        specifier: ^1.7.4
+        version: 1.7.4
       '@floating-ui/dom':
         specifier: 1.7.5
         version: 1.7.5
+      '@floating-ui/utils':
+        specifier: ^0.2.10
+        version: 0.2.10
       '@foobar404/wave':
         specifier: 2.0.5
         version: 2.0.5
+      '@ghostery/adblocker':
+        specifier: ^2.14.0
+        version: 2.14.0
+      '@ghostery/adblocker-content':
+        specifier: ^2.14.0
+        version: 2.14.0
       '@ghostery/adblocker-electron':
         specifier: 2.13.4
         version: 2.13.4(electron@40.1.0)
       '@ghostery/adblocker-electron-preload':
         specifier: 2.13.4
         version: 2.13.4(electron@40.1.0)
+      '@ghostery/adblocker-extended-selectors':
+        specifier: ^2.14.0
+        version: 2.14.0
+      '@ghostery/url-parser':
+        specifier: ^1.3.1
+        version: 1.3.1
       '@hono/node-server':
         specifier: 1.19.9
         version: 1.19.9(hono@4.11.7)
@@ -93,24 +114,54 @@ importers:
       '@mdui/icons':
         specifier: 1.0.3
         version: 1.0.3
+      '@nornagon/put':
+        specifier: ^0.0.8
+        version: 0.0.8
+      '@remusao/guess-url-type':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@remusao/small':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@remusao/smaz':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@remusao/smaz-compress':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@remusao/smaz-decompress':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@remusao/trie':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@skyra/jaro-winkler':
         specifier: 1.1.1
         version: 1.1.1
       '@xhayper/discord-rpc':
         specifier: 1.3.0
         version: 1.3.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+      array-buffer-byte-length:
+        specifier: ^1.0.2
+        version: 1.0.2
       async-mutex:
         specifier: 0.5.0
         version: 0.5.0
       bgutils-js:
         specifier: 3.2.0
         version: 3.2.0
+      browser-extension-url-match:
+        specifier: ^1.2.0
+        version: 1.2.0
       butterchurn:
         specifier: 3.0.0-beta.5
         version: 3.0.0-beta.5
       butterchurn-presets:
         specifier: 3.0.0-beta.4
         version: 3.0.0-beta.4
+      call-bound:
+        specifier: ^1.0.4
+        version: 1.0.4
       color:
         specifier: 5.0.3
         version: 5.0.3
@@ -120,9 +171,18 @@ importers:
       custom-electron-prompt:
         specifier: 1.6.1
         version: 1.6.1(electron@40.1.0)
+      data-uri-to-buffer:
+        specifier: ^6.0.2
+        version: 6.0.2
+      deep-equal:
+        specifier: ^2.2.3
+        version: 2.2.3
       deepmerge-ts:
         specifier: 7.1.5
         version: 7.1.5
+      duplexer:
+        specifier: ^0.1.2
+        version: 0.1.2
       electron-debug:
         specifier: 4.1.0
         version: 4.1.0
@@ -144,18 +204,33 @@ importers:
       es-hangul:
         specifier: 2.3.8
         version: 2.3.8
+      event-stream:
+        specifier: ^4.0.1
+        version: 4.0.1
+      fancy-regex:
+        specifier: ^0.6.3
+        version: 0.6.3
       fast-average-color:
         specifier: 9.5.0
         version: 9.5.0
       fast-equals:
         specifier: 6.0.0
         version: 6.0.0
+      fetch-blob:
+        specifier: ^4.0.0
+        version: 4.0.0
       fflate:
         specifier: 0.8.2
         version: 0.8.2
       filenamify:
         specifier: 7.0.1
         version: 7.0.1
+      formdata-polyfill:
+        specifier: ^4.0.10
+        version: 4.0.10
+      from:
+        specifier: ^0.1.7
+        version: 0.1.7
       hanja:
         specifier: 1.1.5
         version: 1.1.5
@@ -174,9 +249,15 @@ importers:
       i18next:
         specifier: 25.8.0
         version: 25.8.0(typescript@5.9.3)
+      is-url:
+        specifier: ^1.2.4
+        version: 1.2.4
       jimp:
         specifier: 1.6.0
         version: 1.6.0
+      jsbi:
+        specifier: ^4.3.2
+        version: 4.3.2
       keyboardevent-from-electron-accelerator:
         specifier: 2.0.0
         version: 2.0.0
@@ -195,18 +276,45 @@ importers:
       lazy-var:
         specifier: 2.2.2
         version: 2.2.2
+      long:
+        specifier: ^5.3.2
+        version: 5.3.2
+      map-stream:
+        specifier: ^0.0.7
+        version: 0.0.7
       mdui:
         specifier: 2.1.4
         version: 2.1.4(patch_hash=008b925e23862ced06c38f9765eef4322eb8a93cb5e9a6b684fd717fec0ea0d9)
+      node-domexception:
+        specifier: ^2.0.2
+        version: 2.0.2
+      node-fetch:
+        specifier: 3.3.2
+        version: 3.3.2
       node-html-parser:
         specifier: 7.0.2
         version: 7.0.2
       node-id3:
         specifier: 0.2.9
         version: 0.2.9
+      openapi3-ts:
+        specifier: ^4.5.0
+        version: 4.5.0
+      pause-stream:
+        specifier: ^0.0.11
+        version: 0.0.11
       peerjs:
         specifier: 1.5.5
         version: 1.5.5
+      regenerator-runtime:
+        specifier: ^0.14.1
+        version: 0.14.1
+      safe-buffer:
+        specifier: ^5.2.1
+        version: 5.2.1
+      sax:
+        specifier: ^1.4.4
+        version: 1.4.4
       semver:
         specifier: 7.7.3
         version: 7.7.3
@@ -231,12 +339,30 @@ importers:
       solid-transition-group:
         specifier: 0.3.0
         version: 0.3.0(solid-js@1.9.11)
+      split:
+        specifier: ^1.0.1
+        version: 1.0.1
+      stream-combiner:
+        specifier: ^0.2.2
+        version: 0.2.2
+      through:
+        specifier: ^2.3.8
+        version: 2.3.8
       tiny-pinyin:
         specifier: 1.3.2
         version: 1.3.2
       tinyld:
         specifier: 1.3.4
         version: 1.3.4
+      tldts-core:
+        specifier: ^7.0.23
+        version: 7.0.23
+      tldts-experimental:
+        specifier: ^7.0.23
+        version: 7.0.23
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.0
       virtua:
         specifier: 0.48.5
         version: 0.48.5(solid-js@1.9.11)
@@ -246,6 +372,15 @@ importers:
       x11:
         specifier: 2.3.0
         version: 2.3.0
+      xml2js:
+        specifier: 0.6.2
+        version: 0.6.2
+      xmlbuilder:
+        specifier: ^15.1.1
+        version: 15.1.1
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
       youtubei.js:
         specifier: 16.0.1
         version: 16.0.1
@@ -781,8 +916,8 @@ packages:
   '@foobar404/wave@2.0.5':
     resolution: {integrity: sha512-V/ydadtv5ObCw8aEg+Qy3YSq1eyinEWzJfRI43Ovmj7VmAvEdWAdL7MatoMbiIVYPATkNDVF7GOxX1xirxM9dA==}
 
-  '@ghostery/adblocker-content@2.13.4':
-    resolution: {integrity: sha512-VPa4dyHqTyMWxut/wCYYlHdVRsQ2ZXXezTv31WiRhUC86LFKz8rL/Jnj1baHXlRrO5Ndhpll1/e/J/Tzwu6mqg==}
+  '@ghostery/adblocker-content@2.14.0':
+    resolution: {integrity: sha512-XCgGu+b4spvPHMhrqKaAG4NAe6NzGsqj54rNRXpDnCJZowTCuBr2DXfqtLbKlHWy0XBsuoDjP0gddtm7XA27+w==}
 
   '@ghostery/adblocker-electron-preload@2.13.4':
     resolution: {integrity: sha512-8lKTV+wQkhQd68l8V81DWVHEX1PzhYhhSFlouy3AF3JfNL2DWJm+m6Com0wOxm6ft5xV4YrZpkcFs2RZkbxyaQ==}
@@ -794,11 +929,11 @@ packages:
     peerDependencies:
       electron: '>11'
 
-  '@ghostery/adblocker-extended-selectors@2.13.4':
-    resolution: {integrity: sha512-nDNK72R9Ly+AOBsd3f0SAxtF3FELx7ogOPCDD2MVJtv3qYZG76fHUmUoCGRmN2oHlPPNUQJ+vI4Rm/LRM1B5XQ==}
+  '@ghostery/adblocker-extended-selectors@2.14.0':
+    resolution: {integrity: sha512-kmFfyo71FUPdi4OMeNo65JcGZgZZGHU9DOfCYCmBupwVhxU9P4zC12/bGx1vC+RNd3jkqUBKmQ3lTTK+yYfu2Q==}
 
-  '@ghostery/adblocker@2.13.4':
-    resolution: {integrity: sha512-rI7MbS+F2ckIr/2brV+QHMyl55W7F1vazAFiJYHcOBi6i4ClI47Ep95HakwB2qM95gv9igQDTE1zFisV2YKgGg==}
+  '@ghostery/adblocker@2.14.0':
+    resolution: {integrity: sha512-AdqTWU8IUwJDkuJ5KVzWeL8GtRfIde+M0HOLs5TW8ezQy/gvVpL1J90V/SUwDRO2Ay3Wj1B3ZHE15Kv0tRRPEA==}
 
   '@ghostery/url-parser@1.3.1':
     resolution: {integrity: sha512-QKqGi+7aDQ4RcyHyCwgEk6B9vWnsBP4Q7htaN0zPJV3ATqTKEQDtSTb9c/AN586oJUDs24YXKcwFYwNweY/YjQ==}
@@ -1998,6 +2133,10 @@ packages:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
 
+  data-uri-to-buffer@6.0.2:
+    resolution: {integrity: sha512-7hvf7/GW8e86rW0ptuwS3OcBGDjIi6SZva7hCyWC0yYry2cOPmLIjXAUHI6DK2HsnwJd9ifmt57i8eV2n4YNpw==}
+    engines: {node: '>= 14'}
+
   data-view-buffer@1.0.2:
     resolution: {integrity: sha512-EmKO5V3OLXh1rtK2wgXRansaK1/mtVdTUEiEI0W8RkvgT05kfxaH29PliLnpLP73yYO6142Q72QNa8Wx/A5CqQ==}
     engines: {node: '>= 0.4'}
@@ -2517,6 +2656,9 @@ packages:
   fancy-regex@0.5.4:
     resolution: {integrity: sha512-O6qfjtMnrPRs+3XOavCxGQDFaMS9K1vEsQMhPowqx2P/h1fDCvK5RUyeWeyDusMH2FkSHAsRE3IbSBMMg53fmw==}
 
+  fancy-regex@0.6.3:
+    resolution: {integrity: sha512-+CfHzkjEcfNcohq24BGiRgTkbppSjjJEEOC0HFA6w5YiCC29rRWtWERSoz0QN3J/1GqgdBjsaXyAxkL8rzGFXA==}
+
   fast-average-color@9.5.0:
     resolution: {integrity: sha512-nC6x2YIlJ9xxgkMFMd1BNoM1ctMjNoRKfRliPmiEWW3S6rLTHiQcy9g3pt/xiKv/D0NAAkhb9VyV+WJFvTqMGg==}
     engines: {node: '>= 12'}
@@ -2562,6 +2704,10 @@ packages:
   fetch-blob@3.2.0:
     resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
     engines: {node: ^12.20 || >= 14.13}
+
+  fetch-blob@4.0.0:
+    resolution: {integrity: sha512-nPmnhRmpNMjYWnp9EBMGs6z5lq9RXed5W1vuZcECrsDVQInM8AMQSooVb3X183Aole60adzjWbH9qlRFWzDDTA==}
+    engines: {node: '>=16.7'}
 
   fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
@@ -3367,6 +3513,9 @@ packages:
   long@4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
 
+  long@5.3.2:
+    resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
+
   lowercase-keys@2.0.0:
     resolution: {integrity: sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==}
     engines: {node: '>=8'}
@@ -3573,6 +3722,11 @@ packages:
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    deprecated: Use your platform's native DOMException instead
+
+  node-domexception@2.0.2:
+    resolution: {integrity: sha512-Qf9vHK9c5MGgUXj8SnucCIS4oEPuUstjRaMplLGeZpbWMfNV1rvEcXuwoXfN51dUfD1b4muPHPQtCx/5Dj/QAA==}
+    engines: {node: '>=16'}
     deprecated: Use your platform's native DOMException instead
 
   node-fetch@3.3.2:
@@ -3968,6 +4122,9 @@ packages:
 
   regenerator-runtime@0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
+
+  regenerator-runtime@0.14.1:
+    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
   regexp.prototype.flags@1.5.4:
     resolution: {integrity: sha512-dYqgNSZbDwkaJ2ceRd9ojCGjBq+mOm9LmtXnAnEGyHhN/5R7iDW2TRw3h+o/jCFxus3P2LfWIIiwowAjANm7IA==}
@@ -4445,11 +4602,11 @@ packages:
     engines: {node: '>= 12.10.0', npm: '>= 6.12.0', yarn: '>= 1.20.0'}
     hasBin: true
 
-  tldts-core@7.0.19:
-    resolution: {integrity: sha512-lJX2dEWx0SGH4O6p+7FPwYmJ/bu1JbcGJ8RLaG9b7liIgZ85itUVEPbMtWRVrde/0fnDPEPHW10ZsKW3kVsE9A==}
+  tldts-core@7.0.23:
+    resolution: {integrity: sha512-0g9vrtDQLrNIiCj22HSe9d4mLVG3g5ph5DZ8zCKBr4OtrspmNB6ss7hVyzArAeE88ceZocIEGkyW1Ime7fxPtQ==}
 
-  tldts-experimental@7.0.19:
-    resolution: {integrity: sha512-Pu+urmGB5Ja0SQxzF0j1mG40Swnq0xrC6lcQwpPbpD0VlRtqym2Y1bfZen/+mKZ022/FxBIbtQzOU1KRrO1RSg==}
+  tldts-experimental@7.0.23:
+    resolution: {integrity: sha512-jsBnhWMTWVodIrvNEM0vFUf/rNr8fwt9AwsbaObiEQxR0q958ZkVOmvyR+0iaIYBq00FkGGqfnbfIG5Y7GU9MA==}
 
   tmp-promise@3.0.3:
     resolution: {integrity: sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==}
@@ -5275,37 +5432,37 @@ snapshots:
 
   '@foobar404/wave@2.0.5': {}
 
-  '@ghostery/adblocker-content@2.13.4':
+  '@ghostery/adblocker-content@2.14.0':
     dependencies:
-      '@ghostery/adblocker-extended-selectors': 2.13.4
+      '@ghostery/adblocker-extended-selectors': 2.14.0
 
   '@ghostery/adblocker-electron-preload@2.13.4(electron@40.1.0)':
     dependencies:
-      '@ghostery/adblocker-content': 2.13.4
+      '@ghostery/adblocker-content': 2.14.0
       electron: 40.1.0
 
   '@ghostery/adblocker-electron@2.13.4(electron@40.1.0)':
     dependencies:
-      '@ghostery/adblocker': 2.13.4
+      '@ghostery/adblocker': 2.14.0
       '@ghostery/adblocker-electron-preload': 2.13.4(electron@40.1.0)
       electron: 40.1.0
-      tldts-experimental: 7.0.19
+      tldts-experimental: 7.0.23
 
-  '@ghostery/adblocker-extended-selectors@2.13.4': {}
+  '@ghostery/adblocker-extended-selectors@2.14.0': {}
 
-  '@ghostery/adblocker@2.13.4':
+  '@ghostery/adblocker@2.14.0':
     dependencies:
-      '@ghostery/adblocker-content': 2.13.4
-      '@ghostery/adblocker-extended-selectors': 2.13.4
+      '@ghostery/adblocker-content': 2.14.0
+      '@ghostery/adblocker-extended-selectors': 2.14.0
       '@ghostery/url-parser': 1.3.1
       '@remusao/guess-url-type': 2.1.0
       '@remusao/small': 2.1.0
       '@remusao/smaz': 2.2.0
-      tldts-experimental: 7.0.19
+      tldts-experimental: 7.0.23
 
   '@ghostery/url-parser@1.3.1':
     dependencies:
-      tldts-experimental: 7.0.19
+      tldts-experimental: 7.0.23
 
   '@hono/node-server@1.19.9(hono@4.11.7)':
     dependencies:
@@ -6656,6 +6813,8 @@ snapshots:
 
   data-uri-to-buffer@4.0.1: {}
 
+  data-uri-to-buffer@6.0.2: {}
+
   data-view-buffer@1.0.2:
     dependencies:
       call-bound: 1.0.4
@@ -7394,6 +7553,8 @@ snapshots:
 
   fancy-regex@0.5.4: {}
 
+  fancy-regex@0.6.3: {}
+
   fast-average-color@9.5.0: {}
 
   fast-deep-equal@3.1.3: {}
@@ -7432,6 +7593,10 @@ snapshots:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
+
+  fetch-blob@4.0.0:
+    dependencies:
+      node-domexception: 1.0.0
 
   fflate@0.8.2: {}
 
@@ -8265,6 +8430,8 @@ snapshots:
 
   long@4.0.0: {}
 
+  long@5.3.2: {}
+
   lowercase-keys@2.0.0: {}
 
   lru-cache@11.2.5: {}
@@ -8449,6 +8616,8 @@ snapshots:
       semver: 7.7.3
 
   node-domexception@1.0.0: {}
+
+  node-domexception@2.0.2: {}
 
   node-fetch@3.3.2:
     dependencies:
@@ -8858,6 +9027,8 @@ snapshots:
       which-builtin-type: 1.2.1
 
   regenerator-runtime@0.13.11: {}
+
+  regenerator-runtime@0.14.1: {}
 
   regexp.prototype.flags@1.5.4:
     dependencies:
@@ -9371,11 +9542,11 @@ snapshots:
 
   tinyld@1.3.4: {}
 
-  tldts-core@7.0.19: {}
+  tldts-core@7.0.23: {}
 
-  tldts-experimental@7.0.19:
+  tldts-experimental@7.0.23:
     dependencies:
-      tldts-core: 7.0.19
+      tldts-core: 7.0.23
 
   tmp-promise@3.0.3:
     dependencies:
