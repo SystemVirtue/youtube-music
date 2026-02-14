@@ -18,6 +18,8 @@ interface MasterSlaveBackend {
   ws: WebSocket | null;
   serverData: TransferData;
   clientData: TransferData;
+  connectionStatus: 'connected' | 'disconnected' | 'connecting' | 'error';
+  lastCommandTime: number;
 }
 
 interface ConnectParams {
@@ -34,9 +36,16 @@ async function setupServer(ctx: BackendContext<MasterSlavePairConfig>) {
   const app = express();
   app.use(express.json());
 
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: Date.now() });
+  });
+
   app.post('/controlPanel', async (req, res) => {
     const config = await ctx.getConfig();
     const { action } = req.body;
+
+    console.log('[master-slave-pair] Received command:', action);
 
     if (action === 'play') {
       ctx.ipc.send('play');
@@ -44,7 +53,7 @@ async function setupServer(ctx: BackendContext<MasterSlavePairConfig>) {
       ctx.ipc.send('pause');
     }
 
-    res.json({ success: true });
+    res.json({ success: true, timestamp: Date.now() });
   });
 
   const port = await ctx.getConfig().then((c) => c.masterPort);
@@ -59,6 +68,8 @@ async function connectToMaster(ctx: BackendContext<MasterSlavePairConfig>) {
   const config = await ctx.getConfig();
   const url = `http://${config.masterHost}:${config.masterPort}`;
 
+  console.log('[master-slave-pair] Attempting to connect to master at:', url);
+  
   // Simple polling for master connection
   const checkConnection = setInterval(async () => {
     try {
@@ -66,11 +77,17 @@ async function connectToMaster(ctx: BackendContext<MasterSlavePairConfig>) {
       if (res.ok) {
         console.log('[master-slave-pair] Connected to master');
         clearInterval(checkConnection);
+        // Update connection status via IPC if possible
+        ctx.ipc.send('master-slave-pair:status-change', 'connected');
       }
     } catch (err) {
       console.error('[master-slave-pair] Connection error:', err);
+      ctx.ipc.send('master-slave-pair:status-change', 'error');
     }
   }, 5000);
+  
+  // Set initial connecting status
+  ctx.ipc.send('master-slave-pair:status-change', 'connecting');
 }
 
 export const backend = createBackend<MasterSlaveBackend, MasterSlavePairConfig>({
@@ -78,13 +95,18 @@ export const backend = createBackend<MasterSlaveBackend, MasterSlavePairConfig>(
   ws: null,
   serverData: { server: null, ws: null },
   clientData: { server: null, ws: null },
+  connectionStatus: 'disconnected',
+  lastCommandTime: 0,
 
   async start(ctx: BackendContext<MasterSlavePairConfig>) {
     const config = await ctx.getConfig();
 
     if (config.role === InstanceRole.MASTER) {
       this.server = await setupServer(ctx);
+      this.connectionStatus = 'connected';
+      ctx.ipc.send('master-slave-pair:status-change', 'connected');
     } else if (config.role === InstanceRole.SLAVE && config.autoConnect) {
+      this.connectionStatus = 'connecting';
       await connectToMaster(ctx);
     }
 
@@ -101,12 +123,46 @@ export const backend = createBackend<MasterSlaveBackend, MasterSlavePairConfig>(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ command, payload }),
           });
+          this.lastCommandTime = Date.now();
+          if (res.ok) {
+            ctx.ipc.send('master-slave-pair:status-change', 'connected');
+          } else {
+            ctx.ipc.send('master-slave-pair:status-change', 'error');
+          }
           return { success: res.ok };
         } catch (err) {
           console.error('[master-slave-pair] Send command error:', err);
+          ctx.ipc.send('master-slave-pair:status-change', 'error');
           return { success: false };
         }
       }
+    });
+
+    // Test connection endpoint
+    ctx.ipc.handle('master-slave-pair:test-connection', async () => {
+      const config = await ctx.getConfig();
+      
+      if (config.role === InstanceRole.MASTER) {
+        // Test if we can reach slave
+        const url = `http://${config.slaveHost}:${config.slavePort}/health`;
+        try {
+          const res = await fetch(url, { method: 'GET' });
+          return { success: res.ok, status: res.status };
+        } catch (err) {
+          return { success: false, error: err.message };
+        }
+      } else if (config.role === InstanceRole.SLAVE) {
+        // Test if we can reach master
+        const url = `http://${config.masterHost}:${config.masterPort}/health`;
+        try {
+          const res = await fetch(url, { method: 'GET' });
+          return { success: res.ok, status: res.status };
+        } catch (err) {
+          return { success: false, error: err.message };
+        }
+      }
+      
+      return { success: false, error: 'Invalid role' };
     });
 
     // Start new server/client based on the role
@@ -127,10 +183,14 @@ export const backend = createBackend<MasterSlaveBackend, MasterSlavePairConfig>(
   },
 
   async onConfigChange(config: MasterSlavePairConfig, ctx: BackendContext<MasterSlavePairConfig>) {
-    // Restart on role or connection settings changed
-    if (config.role !== this.serverData.server?.constructor) {
+    // Only restart if role actually changed, not just connection settings
+    const currentRole = this.connectionStatus === 'disconnected' ? InstanceRole.NONE : config.role;
+    if (config.role !== currentRole) {
+      console.log('[master-slave-pair] Role changed, restarting...');
       await this.stop?.();
       await this.start?.(ctx);
+    } else {
+      console.log('[master-slave-pair] Configuration updated, no restart needed');
     }
   },
 });

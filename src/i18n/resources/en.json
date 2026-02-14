@@ -982,7 +982,9 @@
     },
     "master-slave-pair": {
       "description": "Synchronize playback between master and slave instances for multi-room audio",
+      "name": "Master-Slave Pair",
       "menu": {
+        "enabled": "Enabled",
         "role": {
           "label": "Instance Role",
           "submenu": {
@@ -992,14 +994,36 @@
           }
         },
         "master-host": "Master Host",
-        "master-port": "Master Port", 
+        "master-port": "Master Port",
         "slave-host": "Slave Host",
         "slave-port": "Slave Port",
-        "auto-connect": "Auto Connect",
-        "connect": "Connect",
-        "disconnect": "Disconnect"
+        "status": "Sync Status",
+        "test-connection": "Test Connection"
       },
-      "name": "Master-Slave Pair"
+      "prompt": {
+        "master-host": {
+          "title": "Master Host",
+          "label": "Enter master device IP address:"
+        },
+        "master-port": {
+          "title": "Master Port",
+          "label": "Enter master port (default 26539):"
+        },
+        "slave-host": {
+          "title": "Slave Host",
+          "label": "Enter slave device IP address:"
+        },
+        "slave-port": {
+          "title": "Slave Port",
+          "label": "Enter slave port (default 26540):"
+        }
+      },
+      "status": {
+        "connected": "OK",
+        "disconnected": "No Sync",
+        "connecting": "Connecting...",
+        "error": "Error"
+      }
     },
     "lyric-overlay": {
       "description": "Display synchronized lyrics as an overlay on the video player",

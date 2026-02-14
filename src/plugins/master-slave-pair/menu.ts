@@ -33,14 +33,36 @@ export const onMenu = async ({
   const config = await getConfig();
   const localIP = getLocalIPAddress();
 
+  // Determine sync status (simplified for now)
+  const getSyncStatus = () => {
+    if (config.role === InstanceRole.NONE) return 'disconnected';
+    if (config.role === InstanceRole.MASTER) {
+      return config.slaveHost !== '127.0.0.1' ? 'connected' : 'disconnected';
+    }
+    if (config.role === InstanceRole.SLAVE) {
+      return config.masterHost !== '127.0.0.1' ? 'connected' : 'disconnected';
+    }
+    return 'disconnected';
+  };
+
+  const syncStatus = getSyncStatus();
+
   return [
     {
-      label: `This Device's IP Address: ${localIP}`,
+      label: `This Device IP: ${localIP}`,
       type: 'normal',
-      enabled: false, // disabled so it's just informational
+      enabled: false,
     },
     {
       type: 'separator',
+    },
+    {
+      label: t('plugins.master-slave-pair.menu.enabled'),
+      type: 'checkbox',
+      checked: config.enabled,
+      click(item) {
+        setConfig({ ...config, enabled: item.checked });
+      },
     },
     {
       label: t('plugins.master-slave-pair.menu.role.label'),
@@ -75,96 +97,84 @@ export const onMenu = async ({
     {
       type: 'separator',
     },
-    {
-      label: t('plugins.master-slave-pair.menu.master-host.label'),
-      type: 'normal',
-      async click() {
-        const newHost = await prompt(
-          {
-            title: t('plugins.master-slave-pair.prompt.master-host.title'),
-            label: t('plugins.master-slave-pair.prompt.master-host.label'),
-            value: config.masterHost,
-            type: 'input',
-            inputAttrs: { type: 'text' },
-            width: 380,
-            ...promptOptions(),
-          },
-          window,
-        );
+    // Only show slave host config when in Master mode
+    ...(config.role === InstanceRole.MASTER ? [
+      {
+        label: t('plugins.master-slave-pair.menu.slave-host.label'),
+        type: 'normal',
+        async click() {
+          const newHost = await prompt(
+            {
+              title: t('plugins.master-slave-pair.prompt.slave-host.title'),
+              label: t('plugins.master-slave-pair.prompt.slave-host.label'),
+              value: config.slaveHost,
+              type: 'input',
+              inputAttrs: { type: 'text', placeholder: 'e.g., 192.168.1.100' },
+              width: 380,
+              ...promptOptions(),
+            },
+            window,
+          );
 
-        if (newHost) {
-          setConfig({ ...config, masterHost: newHost });
-        }
-      },
-    },
-    {
-      label: t('plugins.master-slave-pair.prompt.master-port.label'),
-      type: 'normal',
-      async click() {
-        const newPort = await prompt(
-          {
-            title: t('plugins.master-slave-pair.prompt.master-port.title'),
-            label: t('plugins.master-slave-pair.prompt.master-port.label'),
-            value: config.masterPort,
-            type: 'counter',
-            counterOptions: { minimum: 1, maximum: 65535 },
-            width: 380,
-            ...promptOptions(),
-          },
-          window,
-        );
+          if (newHost && newHost !== config.slaveHost) {
+            setConfig({ ...config, slaveHost: newHost });
+          }
+        },
+      }
+    ] : []),
+    // Only show master host config when in Slave mode
+    ...(config.role === InstanceRole.SLAVE ? [
+      {
+        label: t('plugins.master-slave-pair.menu.master-host.label'),
+        type: 'normal',
+        async click() {
+          const newHost = await prompt(
+            {
+              title: t('plugins.master-slave-pair.prompt.master-host.title'),
+              label: t('plugins.master-slave-pair.prompt.master-host.label'),
+              value: config.masterHost,
+              type: 'input',
+              inputAttrs: { type: 'text', placeholder: 'e.g., 192.168.1.100' },
+              width: 380,
+              ...promptOptions(),
+            },
+            window,
+          );
 
-        if (newPort) {
-          setConfig({ ...config, masterPort: newPort });
-        }
-      },
-    },
+          if (newHost && newHost !== config.masterHost) {
+            setConfig({ ...config, masterHost: newHost });
+          }
+        },
+      }
+    ] : []),
     {
       type: 'separator',
     },
     {
-      label: t('plugins.master-slave-pair.menu.slave-host.label'),
+      label: `${t('plugins.master-slave-pair.menu.status')}: ${t(`plugins.master-slave-pair.status.${syncStatus}`)}`,
       type: 'normal',
-      async click() {
-        const newHost = await prompt(
-          {
-            title: t('plugins.master-slave-pair.prompt.slave-host.title'),
-            label: t('plugins.master-slave-pair.prompt.slave-host.label'),
-            value: config.slaveHost,
-            type: 'input',
-            inputAttrs: { type: 'text' },
-            width: 380,
-            ...promptOptions(),
-          },
-          window,
-        );
-
-        if (newHost) {
-          setConfig({ ...config, slaveHost: newHost });
-        }
-      },
+      enabled: false,
     },
-    {
-      label: t('plugins.master-slave-pair.menu.slave-port.label'),
-      type: 'normal',
-      async click() {
-        const newPort = await prompt(
-          {
-            title: t('plugins.master-slave-pair.prompt.slave-port.title'),
-            label: t('plugins.master-slave-pair.prompt.slave-port.label'),
-            value: config.slavePort,
-            type: 'counter',
-            counterOptions: { minimum: 1, maximum: 65535 },
-            width: 380,
-            ...promptOptions(),
-          },
-          window,
-        );
-
-        if (newPort) {
-          setConfig({ ...config, slavePort: newPort });
-        }
-      },
-    },
+    ...(config.role !== InstanceRole.NONE ? [
+      {
+        label: t('plugins.master-slave-pair.menu.test-connection'),
+        type: 'normal',
+        async click() {
+          try {
+            console.log('[master-slave-pair] Testing connection...');
+            const result = await window.electronAPI.invoke('master-slave-pair:test-connection');
+            if (result.success) {
+              console.log('[master-slave-pair] Connection test successful!');
+              // Could show a toast notification here
+            } else {
+              console.error('[master-slave-pair] Connection test failed:', result.error);
+              // Could show an error toast here
+            }
+          } catch (err) {
+            console.error('[master-slave-pair] Test connection error:', err);
+          }
+        },
+      }
+    ] : []),
   ];
 };
